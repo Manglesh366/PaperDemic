@@ -1,0 +1,262 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>RAG Assistant - Login</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="login-page">
+
+    <div class="login-card">
+
+        <!-- ================================================= -->
+        <!-- LOGO / TITLE -->
+        <!-- ================================================= -->
+
+        <div class="login-header">
+
+            <div class="logo">
+                RAG
+            </div>
+
+            <h1>
+                RAG Assistant
+            </h1>
+
+            <p>
+                Your personal document AI assistant
+            </p>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- ERROR MESSAGE -->
+        <!-- ================================================= -->
+
+        {% if error %}
+
+        <div class="error-message">
+
+            <span>⚠</span>
+
+            <span>
+                {{ error }}
+            </span>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================================================= -->
+        <!-- LOGIN FORM -->
+        <!-- ================================================= -->
+
+        <form
+            action="/login"
+            method="post"
+            class="login-form"
+        >
+
+            <!-- USERNAME -->
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                    id="username"
+                    type="text"
+                    name="username"
+                    placeholder="Enter your username"
+                    autocomplete="username"
+                    required
+                    autofocus
+                >
+
+            </div>
+
+
+            <!-- PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="password-container">
+
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        id="toggle-password"
+                        class="password-toggle"
+                    >
+                        Show
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- SUBMIT -->
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+
+                Login / Create Account
+
+            </button>
+
+        </form>
+
+
+        <!-- ================================================= -->
+        <!-- INFORMATION -->
+        <!-- ================================================= -->
+
+        <div class="login-info">
+
+            <div class="info-icon">
+                ℹ
+            </div>
+
+            <p>
+                If you're a new user, simply enter a new
+                username and password. Your account will
+                be created automatically.
+            </p>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- FEATURES -->
+        <!-- ================================================= -->
+
+        <div class="features">
+
+            <div class="feature">
+
+                <span class="feature-icon">
+                    📄
+                </span>
+
+                <span>
+                    Upload your documents
+                </span>
+
+            </div>
+
+
+            <div class="feature">
+
+                <span class="feature-icon">
+                    🤖
+                </span>
+
+                <span>
+                    Ask questions using AI
+                </span>
+
+            </div>
+
+
+            <div class="feature">
+
+                <span class="feature-icon">
+                    🔒
+                </span>
+
+                <span>
+                    Your documents stay private
+                </span>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- PASSWORD TOGGLE -->
+<!-- ========================================================= -->
+
+<script>
+
+const passwordInput =
+    document.getElementById("password");
+
+const togglePassword =
+    document.getElementById("toggle-password");
+
+
+togglePassword.addEventListener(
+    "click",
+    function () {
+
+        if (
+            passwordInput.type === "password"
+        ) {
+
+            passwordInput.type = "text";
+
+            togglePassword.textContent =
+                "Hide";
+
+        } else {
+
+            passwordInput.type = "password";
+
+            togglePassword.textContent =
+                "Show";
+
+        }
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
+

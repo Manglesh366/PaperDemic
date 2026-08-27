@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>RAG Assistant</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ================================================= -->
+    <!-- SIDEBAR -->
+    <!-- ================================================= -->
+
+    <aside class="sidebar">
+
+        <h2>RAG Assistant</h2>
+
+        <div class="user">
+
+            Logged in as:
+
+            <strong>
+                {{ username }}
+            </strong>
+
+        </div>
+
+        <hr>
+
+
+        <!-- ================================================= -->
+        <!-- UPLOAD -->
+        <!-- ================================================= -->
+
+        <h3>
+            Upload Documents
+        </h3>
+
+        <form
+            id="upload-form"
+            enctype="multipart/form-data"
+        >
+
+            <input
+                type="file"
+                id="file"
+                name="file"
+                accept=".pdf,.txt,.docx,.csv"
+                required
+            >
+
+            <button
+                type="submit"
+                class="upload-button"
+            >
+                Upload
+            </button>
+
+        </form>
+
+        <div id="upload-status"></div>
+
+
+        <!-- ================================================= -->
+        <!-- FILE LIST -->
+        <!-- ================================================= -->
+
+        <h3>
+            Your Documents
+        </h3>
+
+        <div class="uploaded-files">
+
+            {% for file in uploaded_files %}
+
+            <div class="file-item">
+
+                📄 {{ file }}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <hr>
+
+
+        <!-- ================================================= -->
+        <!-- CHAT HISTORY -->
+        <!-- ================================================= -->
+
+        <h3>
+            Chat History
+        </h3>
+
+        <div class="history">
+
+            {% for chat in history %}
+
+            <div class="history-item">
+
+                <strong>
+                    {{ chat.question[:50] }}
+                </strong>
+
+                <small>
+                    {{ chat.created_at }}
+                </small>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- LOGOUT -->
+        <!-- ================================================= -->
+
+        <a
+            href="/logout"
+            class="logout"
+        >
+            Logout
+        </a>
+
+    </aside>
+
+
+    <!-- ================================================= -->
+    <!-- MAIN CHAT -->
+    <!-- ================================================= -->
+
+    <main class="chat-container">
+
+        <div class="chat-header">
+
+            <h1>
+                RAG Chat
+            </h1>
+
+            <p>
+                Ask questions about your uploaded documents
+            </p>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- CHAT BOX -->
+        <!-- ================================================= -->
+
+        <div
+            id="chat-box"
+            class="chat-box"
+        >
+
+            {% for chat in history|reverse %}
+
+            <div class="message user-message">
+
+                <strong>
+                    You
+                </strong>
+
+                <p>
+                    {{ chat.question }}
+                </p>
+
+            </div>
+
+            <div class="message assistant-message">
+
+                <strong>
+                    RAG Assistant
+                </strong>
+
+                <p>
+                    {{ chat.answer }}
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- CHAT INPUT -->
+        <!-- ================================================= -->
+
+        <form
+            id="chat-form"
+            class="chat-form"
+        >
+
+            <input
+                id="question"
+                name="question"
+                type="text"
+                placeholder="Ask something about your documents..."
+                autocomplete="off"
+                required
+            >
+
+            <button type="submit">
+                Send
+            </button>
+
+        </form>
+
+    </main>
+
+</div>
+
+
+<script src="/static/app.js"></script>
+
+</body>
+
+</html>
