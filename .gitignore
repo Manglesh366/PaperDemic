@@ -1,2 +1,7 @@
 .env
 config.json
+ Python cache
+__pycache__/
+*.pyc
+data/chroma/
+uploads/

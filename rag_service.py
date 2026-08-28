@@ -1,7 +1,3 @@
-# ============================================================
-# RAG SERVICE
-# ============================================================
-
 import os
 from pathlib import Path
 
@@ -9,137 +5,60 @@ from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
     Docx2txtLoader,
-    CSVLoader
+    CSVLoader,
 )
-
-from langchain_text_splitters import (
-    RecursiveCharacterTextSplitter
-)
-
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import (
-    GoogleGenerativeAIEmbeddings
+    GoogleGenerativeAIEmbeddings,
+    ChatGoogleGenerativeAI,
 )
-
 from langchain_chroma import Chroma
-
-from langchain_core.prompts import (
-    ChatPromptTemplate
-)
-
-from langchain_openai import (
-    ChatOpenAI
-)
-
-from langchain_community.chat_message_histories import (
-    SQLChatMessageHistory
-)
-
-from langchain_core.messages import (
-    HumanMessage,
-    AIMessage
-)
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.chat_message_histories import SQLChatMessageHistory
+from langchain_core.messages import HumanMessage, AIMessage
 
 
-# ============================================================
-# API KEYS
-# ============================================================
-
-# IMPORTANT:
-#
-# Set these in your terminal instead of putting real API keys
-# directly inside this file.
-#
-# Linux:
-#
-# export GOOGLE_API_KEY="your-key"
-# export OPENROUTER="your-key"
-#
-# ============================================================
-
-GOOGLE_API_KEY = os.getenv(
-    "GOOGLE_API_KEY"
-)
-
-OPENROUTER_API_KEY = os.getenv(
-    "OPENROUTER"
-)
-
+# Google Gemini API key.
+GOOGLE_API_KEY = "api"
 
 if not GOOGLE_API_KEY:
-
-    raise RuntimeError(
-        "GOOGLE_API_KEY environment variable is not set."
-    )
+    raise RuntimeError("GOOGLE_API_KEY is not set.")
 
 
-if not OPENROUTER_API_KEY:
-
-    raise RuntimeError(
-        "OPENROUTER environment variable is not set."
-    )
-
-
-# ============================================================
-# DIRECTORIES
-# ============================================================
-
-BASE_DATA_DIR = Path(
-    "data"
-)
-
-CHROMA_DIR = (
-    BASE_DATA_DIR / "chroma"
-)
+# Local storage for Chroma and SQLite.
+BASE_DATA_DIR = Path("data")
+CHROMA_DIR = BASE_DATA_DIR / "chroma"
 
 CHROMA_DIR.mkdir(
     parents=True,
-    exist_ok=True
+    exist_ok=True,
 )
 
-
-# ============================================================
-# CHAT HISTORY DATABASE
-# ============================================================
-
-CHAT_HISTORY_DATABASE = (
-    "sqlite:///chat_history.db"
-)
+CHAT_HISTORY_DATABASE = "sqlite:///chat_history.db"
 
 
-# ============================================================
-# EMBEDDINGS
-# ============================================================
-
+# Gemini embedding model converts document text into vectors.
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001"
+    model="models/gemini-embedding-001",
+    google_api_key=GOOGLE_API_KEY,
 )
 
 
-# ============================================================
-# LLM
-# ============================================================
-
-llm = ChatOpenAI(
-    model="poolside/laguna-s-2.1:free",
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY
+# Gemini generates the final answer from retrieved context.
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.6-flash",
+    google_api_key=GOOGLE_API_KEY,
 )
 
 
-# ============================================================
-# TEXT SPLITTER
-# ============================================================
-
+# Splits large documents into smaller searchable chunks.
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
-    chunk_overlap=200
+    chunk_overlap=200,
 )
 
 
-# ============================================================
-# PROMPT
-# ============================================================
-
+# Prompt used to generate answers from documents and chat history.
 prompt = ChatPromptTemplate.from_template(
     """
 You are a helpful assistant answering questions
@@ -157,11 +76,9 @@ Current question:
 Instructions:
 
 1. Answer using the provided context.
-2. Use previous conversation when it helps understand
-   the current question.
+2. Use previous conversation when helpful.
 3. Do not invent information.
-4. If the answer cannot be found in the provided context,
-   say that you don't know.
+4. If the answer is not in the context, say you don't know.
 5. Give a clear and useful answer.
 
 Answer:
@@ -169,14 +86,9 @@ Answer:
 )
 
 
-# ============================================================
-# FORMAT DOCUMENTS
-# ============================================================
-
+# Converts retrieved documents into one context string.
 def format_docs(docs):
-
     if not docs:
-
         return (
             "No relevant documents were found "
             "in the user's uploaded documents."
@@ -188,106 +100,49 @@ def format_docs(docs):
     )
 
 
-# ============================================================
-# GET USER CHROMA DIRECTORY
-# ============================================================
-
-def get_user_chroma_directory(
-    user_id
-):
-
-    user_dir = (
-        CHROMA_DIR / f"user_{user_id}"
-    )
+# Returns the Chroma directory for a specific user.
+def get_user_chroma_directory(user_id):
+    user_dir = CHROMA_DIR / f"user_{user_id}"
 
     user_dir.mkdir(
         parents=True,
-        exist_ok=True
+        exist_ok=True,
     )
 
     return str(user_dir)
 
 
-# ============================================================
-# GET USER VECTOR STORE
-# ============================================================
+# Returns the user's private vector store.
+def get_user_vector_store(user_id):
+    persist_directory = get_user_chroma_directory(user_id)
 
-def get_user_vector_store(
-    user_id
-):
-
-    persist_directory = (
-        get_user_chroma_directory(
-            user_id
-        )
-    )
-
-    vector_store = Chroma(
+    return Chroma(
         collection_name=f"user_{user_id}",
         embedding_function=embeddings,
-        persist_directory=persist_directory
+        persist_directory=persist_directory,
     )
 
-    return vector_store
 
-
-# ============================================================
-# LOAD DOCUMENT
-# ============================================================
-
-def load_document(
-    file_path: str
-):
-
-    extension = (
-        Path(file_path)
-        .suffix
-        .lower()
-    )
-
-    # --------------------------------------------------------
-    # PDF
-    # --------------------------------------------------------
+# Loads PDF, TXT, DOCX, or CSV files.
+def load_document(file_path: str):
+    extension = Path(file_path).suffix.lower()
 
     if extension == ".pdf":
-
-        loader = PyMuPDFLoader(
-            file_path
-        )
-
-    # --------------------------------------------------------
-    # TXT
-    # --------------------------------------------------------
+        loader = PyMuPDFLoader(file_path)
 
     elif extension == ".txt":
-
         loader = TextLoader(
             file_path,
-            encoding="utf-8"
+            encoding="utf-8",
         )
-
-    # --------------------------------------------------------
-    # DOCX
-    # --------------------------------------------------------
 
     elif extension == ".docx":
-
-        loader = Docx2txtLoader(
-            file_path
-        )
-
-    # --------------------------------------------------------
-    # CSV
-    # --------------------------------------------------------
+        loader = Docx2txtLoader(file_path)
 
     elif extension == ".csv":
-
-        loader = CSVLoader(
-            file_path
-        )
+        loader = CSVLoader(file_path)
 
     else:
-
         raise ValueError(
             f"Unsupported file type: {extension}"
         )
@@ -295,68 +150,33 @@ def load_document(
     return loader.load()
 
 
-# ============================================================
-# ADD DOCUMENT TO USER VECTOR DATABASE
-# ============================================================
-
+# Loads, splits, and stores a document in the user's vector database.
 def add_document(
     file_path: str,
-    user_id
+    user_id,
 ):
-
-    # --------------------------------------------------------
-    # Load document
-    # --------------------------------------------------------
-
-    docs = load_document(
-        file_path
-    )
+    docs = load_document(file_path)
 
     if not docs:
-
         raise ValueError(
             "No text could be extracted from the document."
         )
 
-    # --------------------------------------------------------
-    # Split into chunks
-    # --------------------------------------------------------
-
-    texts = text_splitter.split_documents(
-        docs
-    )
+    texts = text_splitter.split_documents(docs)
 
     if not texts:
-
         raise ValueError(
             "Document produced no text chunks."
         )
 
-    # --------------------------------------------------------
-    # Add metadata
-    # --------------------------------------------------------
-
+    # Add information that identifies the document owner and file.
     for document in texts:
+        document.metadata["user_id"] = str(user_id)
+        document.metadata["source_file"] = Path(
+            file_path
+        ).name
 
-        document.metadata[
-            "user_id"
-        ] = str(user_id)
-
-        document.metadata[
-            "source_file"
-        ] = Path(file_path).name
-
-    # --------------------------------------------------------
-    # Get user's vector store
-    # --------------------------------------------------------
-
-    vector_store = get_user_vector_store(
-        user_id
-    )
-
-    # --------------------------------------------------------
-    # Add chunks
-    # --------------------------------------------------------
+    vector_store = get_user_vector_store(user_id)
 
     vector_store.add_documents(
         documents=texts
@@ -365,32 +185,17 @@ def add_document(
     return len(texts)
 
 
-# ============================================================
-# GET USER CHAT HISTORY
-# ============================================================
-
-def get_chat_history(
-    session_id
-):
-
-    history = SQLChatMessageHistory(
+# Opens the SQLite conversation history for a session.
+def get_chat_history(session_id):
+    return SQLChatMessageHistory(
         session_id=str(session_id),
-        connection=CHAT_HISTORY_DATABASE
+        connection=CHAT_HISTORY_DATABASE,
     )
 
-    return history
 
-
-# ============================================================
-# FORMAT CHAT HISTORY
-# ============================================================
-
-def format_history(
-    messages
-):
-
+# Converts previous messages into text for the prompt.
+def format_history(messages):
     if not messages:
-
         return "No previous conversation."
 
     return "\n".join(
@@ -399,104 +204,90 @@ def format_history(
     )
 
 
-# ============================================================
-# ASK RAG
-# ============================================================
+# Converts Gemini's response into plain text.
+#
+# Gemini can sometimes return:
+# [{"type": "text", "text": "The tortoise won."}]
+#
+# SQLite cannot store this list directly, so we extract the text.
+def get_answer_text(content):
+    if isinstance(content, str):
+        return content
 
+    if isinstance(content, list):
+        text_parts = []
+
+        for item in content:
+            if isinstance(item, dict):
+                text = item.get("text")
+
+                if text:
+                    text_parts.append(text)
+
+        return "".join(text_parts)
+
+    return str(content)
+
+
+# Retrieves relevant documents and generates the final answer.
 def ask_rag(
     question: str,
     session_id="user_123",
-    user_id=None
+    user_id=None,
 ):
-
-    # --------------------------------------------------------
-    # Make sure user_id exists
-    # --------------------------------------------------------
-
+    # Use the session ID when no separate user ID is provided.
     if user_id is None:
-
         user_id = session_id
 
-    # --------------------------------------------------------
-    # Get user's vector store
-    # --------------------------------------------------------
+    # Open the user's vector database.
+    vector_store = get_user_vector_store(user_id)
 
-    vector_store = get_user_vector_store(
-        user_id
-    )
+    # Check whether the user has uploaded documents.
+    document_count = vector_store._collection.count()
 
-    # --------------------------------------------------------
-    # Get vector collection
-    # --------------------------------------------------------
-
-    collection = vector_store._collection
-
-    document_count = collection.count()
-
-    # --------------------------------------------------------
-    # Get conversation history
-    # --------------------------------------------------------
-
-    history = get_chat_history(
-        session_id
-    )
-
+    # Load previous conversation.
+    history = get_chat_history(session_id)
     previous_messages = history.messages
 
     chat_history = format_history(
         previous_messages
     )
 
-    # --------------------------------------------------------
-    # Search user's documents
-    # --------------------------------------------------------
-
+    # Retrieve the most relevant document chunks.
     if document_count > 0:
-
         retriever = vector_store.as_retriever(
             search_kwargs={
                 "k": 5
             }
         )
 
-        relevant_docs = retriever.invoke(
-            question
-        )
+        relevant_docs = retriever.invoke(question)
 
         context = format_docs(
             relevant_docs
         )
 
     else:
-
         context = (
             "The user has not uploaded any documents yet."
         )
 
-    # --------------------------------------------------------
-    # Build prompt
-    # --------------------------------------------------------
-
+    # Add history, context, and question to the prompt.
     formatted_prompt = prompt.invoke({
         "chat_history": chat_history,
         "context": context,
-        "question": question
+        "question": question,
     })
 
-    # --------------------------------------------------------
-    # Call LLM
-    # --------------------------------------------------------
+    # Generate the answer with Gemini.
+    response = llm.invoke(formatted_prompt)
 
-    response = llm.invoke(
-        formatted_prompt
+    # Convert Gemini's response to plain text.
+    answer = get_answer_text(
+        response.content
     )
 
-    answer = response.content
-
-    # --------------------------------------------------------
-    # Save conversation
-    # --------------------------------------------------------
-
+    # Save the conversation for future questions.
     history.add_message(
         HumanMessage(
             content=question
@@ -509,14 +300,4 @@ def ask_rag(
         )
     )
 
-    # --------------------------------------------------------
-    # Return answer
-    # --------------------------------------------------------
-
     return answer
-
-
-# ============================================================
-# API 
-# ============================================================
-

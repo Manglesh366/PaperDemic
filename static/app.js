@@ -1,269 +1,151 @@
-// ============================================================
-// CHAT
-// ============================================================
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
 
-const chatForm =
-    document.getElementById("chat-form");
+const chatForm = document.getElementById("chat-form");
+const questionInput = document.getElementById("question");
+const chatBox = document.getElementById("chat-box");
 
-const questionInput =
-    document.getElementById("question");
+chatForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-const chatBox =
-    document.getElementById("chat-box");
+  const question = questionInput.value.trim();
+  if (!question) return;
 
+  appendMessage("You", question);
+  questionInput.value = "";
+  questionInput.disabled = true;
 
-chatForm.addEventListener(
-    "submit",
-    async (event) => {
+  // Placeholder bubble while we wait for the backend to respond.
+  const loading = createMessageEl("RAG Assistant", "Searching your documents...");
+  chatBox.appendChild(loading);
+  scrollToBottom();
 
-        event.preventDefault();
+  try {
+    const formData = new FormData();
+    formData.append("question", question);
 
-        const question =
-            questionInput.value.trim();
+    const response = await fetch("/chat", {
+      method: "POST",
+      body: formData,
+    });
 
-        if (!question) {
-            return;
-        }
+    const data = await response.json();
 
-        // ----------------------------------------------------
-        // Show user message
-        // ----------------------------------------------------
-
-        chatBox.innerHTML += `
-            <div class="message user-message">
-
-                <strong>
-                    You
-                </strong>
-
-                <p>
-                    ${escapeHtml(question)}
-                </p>
-
-            </div>
-        `;
-
-        questionInput.value = "";
-
-
-        // ----------------------------------------------------
-        // Loading message
-        // ----------------------------------------------------
-
-        const loading =
-            document.createElement("div");
-
-        loading.className =
-            "message assistant-message";
-
-        loading.innerHTML = `
-            <strong>
-                RAG Assistant
-            </strong>
-
-            <p>
-                Searching your documents...
-            </p>
-        `;
-
-        chatBox.appendChild(
-            loading
-        );
-
-
-        chatBox.scrollTop =
-            chatBox.scrollHeight;
-
-
-        try {
-
-            const formData =
-                new FormData();
-
-            formData.append(
-                "question",
-                question
-            );
-
-
-            const response =
-                await fetch(
-                    "/chat",
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.detail ||
-                    "Something went wrong"
-                );
-
-            }
-
-
-            loading.innerHTML = `
-                <strong>
-                    RAG Assistant
-                </strong>
-
-                <p>
-                    ${escapeHtml(data.answer)}
-                </p>
-            `;
-
-
-        } catch (error) {
-
-            loading.innerHTML = `
-                <strong>
-                    Error
-                </strong>
-
-                <p>
-                    ${escapeHtml(error.message)}
-                </p>
-            `;
-
-        }
-
-
-        chatBox.scrollTop =
-            chatBox.scrollHeight;
-
+    if (!response.ok) {
+      throw new Error(data.detail || "Something went wrong");
     }
-);
 
+    updateMessageEl(loading, "RAG Assistant", data.answer);
+  } catch (error) {
+    updateMessageEl(loading, "Error", error.message);
+  } finally {
+    questionInput.disabled = false;
+    questionInput.focus();
+    scrollToBottom();
+  }
+});
 
-// ============================================================
-// FILE UPLOAD
-// ============================================================
+function appendMessage(author, text) {
+  const el = createMessageEl(author, text);
+  chatBox.appendChild(el);
+  scrollToBottom();
+}
 
-const uploadForm =
-    document.getElementById(
-        "upload-form"
-    );
+function createMessageEl(author, text) {
+  const isUser = author === "You";
+  const el = document.createElement("div");
+  el.className = `message ${isUser ? "user-message" : "assistant-message"}`;
+  el.innerHTML = `<strong>${escapeHtml(author)}</strong><p>${escapeHtml(text)}</p>`;
+  return el;
+}
 
-const uploadStatus =
-    document.getElementById(
-        "upload-status"
-    );
+function updateMessageEl(el, author, text) {
+  el.innerHTML = `<strong>${escapeHtml(author)}</strong><p>${escapeHtml(text)}</p>`;
+}
 
+function scrollToBottom() {
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-uploadForm.addEventListener(
-    "submit",
-    async (event) => {
+// ---------------------------------------------------------------------------
+// File upload
+// ---------------------------------------------------------------------------
 
-        event.preventDefault();
+const uploadForm = document.getElementById("upload-form");
+const uploadStatus = document.getElementById("upload-status");
+const fileInput = document.getElementById("file");
+const fileNameLabel = document.getElementById("file-name");
 
+fileInput.addEventListener("change", () => {
+  fileNameLabel.textContent = fileInput.files[0] ? fileInput.files[0].name : "Choose a file";
+});
 
-        const fileInput =
-            document.getElementById(
-                "file"
-            );
+uploadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
+  if (!fileInput.files || fileInput.files.length === 0) {
+    uploadStatus.innerText = "Please select a file.";
+    return;
+  }
 
-        if (
-            !fileInput.files ||
-            fileInput.files.length === 0
-        ) {
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
 
-            uploadStatus.innerText =
-                "Please select a file.";
+  uploadStatus.innerText = "Uploading and indexing...";
 
-            return;
+  try {
+    const response = await fetch("/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-        }
+    const data = await response.json();
 
-
-        const formData =
-            new FormData();
-
-        formData.append(
-            "file",
-            fileInput.files[0]
-        );
-
-
-        uploadStatus.innerText =
-            "Uploading and indexing...";
-
-
-        try {
-
-            const response =
-                await fetch(
-                    "/upload",
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.detail ||
-                    "Upload failed"
-                );
-
-            }
-
-
-            uploadStatus.innerText =
-                `${data.filename} uploaded successfully. ` +
-                `${data.chunks_added} chunks indexed.`;
-
-
-            fileInput.value = "";
-
-
-            // Refresh page so uploaded file appears
-            setTimeout(
-                () => {
-                    window.location.reload();
-                },
-                1000
-            );
-
-
-        } catch (error) {
-
-            uploadStatus.innerText =
-                "Error: " +
-                error.message;
-
-        }
-
+    if (!response.ok) {
+      throw new Error(data.detail || "Upload failed");
     }
-);
 
+    uploadStatus.innerText =
+      `${data.filename} uploaded successfully. ${data.chunks_added} chunks indexed.`;
 
-// ============================================================
-// HTML ESCAPE
-// ============================================================
+    fileInput.value = "";
+    fileNameLabel.textContent = "Choose a file";
+
+    // Reload so the new file shows up in the sidebar list.
+    setTimeout(() => window.location.reload(), 1000);
+  } catch (error) {
+    uploadStatus.innerText = "Error: " + error.message;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
 
 function escapeHtml(text) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-    div.textContent = text;
-
-    return div.innerHTML;
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }
+
+// ---------------------------------------------------------------------------
+// Light / dark theme toggle, persisted in localStorage
+// ---------------------------------------------------------------------------
+
+const themeToggle = document.getElementById("theme-toggle");
+
+function syncThemeIcon() {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeToggle.textContent = isDark ? "🌙" : "☀️";
+}
+
+themeToggle.addEventListener("click", () => {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const next = isDark ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  syncThemeIcon();
+});
+
+syncThemeIcon();
