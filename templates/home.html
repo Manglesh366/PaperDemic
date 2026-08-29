@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RAG Assistant</title>
   <link rel="stylesheet" href="/static/style.css">
+  <script>
+    // Applied before paint so the page never flashes the wrong theme.
+    (function () {
+      var saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+    })();
+  </script>
 </head>
 <body>
 
@@ -12,7 +19,10 @@
 
   <!-- Sidebar: account, upload, document list, chat history -->
   <aside class="sidebar">
-    <h2>RAG Assistant</h2>
+    <div class="sidebar-top">
+      <h2>RAG Assistant</h2>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch theme" title="Switch theme">🌙</button>
+    </div>
     <div class="user">Logged in as <strong>{{ username }}</strong></div>
 
     <hr>
