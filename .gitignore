@@ -1,7 +1,18 @@
 .env
 config.json
- Python cache
+
+# Python cache
 __pycache__/
 *.pyc
+
+# Databases
+chat_history.db
+rag.db
+
+# Chroma / vector database
+chroma_db/
 data/chroma/
+data/
+
+# Uploaded files
 uploads/
