@@ -1,2 +1,7 @@
 .env
 config.json
+chat_history.db
+rag.db
+chroma_db/
+data/
+uploads/

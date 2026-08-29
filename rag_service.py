@@ -44,18 +44,6 @@ from langchain_core.messages import (
 # API KEYS
 # ============================================================
 
-# IMPORTANT:
-#
-# Set these in your terminal instead of putting real API keys
-# directly inside this file.
-#
-# Linux:
-#
-# export GOOGLE_API_KEY="your-key"
-# export OPENROUTER="your-key"
-#
-# ============================================================
-
 GOOGLE_API_KEY = os.getenv(
     "GOOGLE_API_KEY"
 )
@@ -142,8 +130,10 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 prompt = ChatPromptTemplate.from_template(
     """
-You are a helpful assistant answering questions
-based on the provided context.
+You are a helpful document-based AI assistant.
+
+Your job is to answer the user's question using ONLY the
+provided context and previous conversation.
 
 Previous conversation:
 {chat_history}
@@ -154,15 +144,23 @@ Context:
 Current question:
 {question}
 
-Instructions:
+Follow these response rules:
 
-1. Answer using the provided context.
-2. Use previous conversation when it helps understand
-   the current question.
-3. Do not invent information.
-4. If the answer cannot be found in the provided context,
-   say that you don't know.
-5. Give a clear and useful answer.
+1. Give a direct answer first.
+2. Use clear Markdown formatting.
+3. Use short headings when they improve readability.
+4. Use bullet points for lists.
+5. Use numbered lists for step-by-step explanations.
+6. Use **bold** only for important terms.
+7. Keep paragraphs short.
+8. Use code blocks when explaining code.
+9. Do not unnecessarily repeat the question.
+10. Do not use excessive headings.
+11. Do not add unnecessary introductory phrases.
+12. If the answer cannot be found in the context, clearly say:
+   "I don't know based on the provided documents."
+
+Return only the final answer.
 
 Answer:
 """
@@ -515,8 +513,4 @@ def ask_rag(
 
     return answer
 
-
-# ============================================================
-# API 
-# ============================================================
 

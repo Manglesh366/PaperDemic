@@ -688,3 +688,230 @@ body {
 
 }
 
+
+/* ============================================================
+   CHAT MESSAGE
+   ============================================================ */
+
+.message {
+    margin-bottom: 22px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    line-height: 1.6;
+}
+
+
+.user-message {
+    background: #f1f1f1;
+}
+
+
+.assistant-message {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+}
+
+
+/* ============================================================
+   MESSAGE HEADER
+   ============================================================ */
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+
+.message-avatar {
+    font-size: 18px;
+}
+
+
+.message-content {
+    font-size: 15px;
+    color: #333;
+}
+
+
+/* ============================================================
+   MARKDOWN
+   ============================================================ */
+
+.markdown-body {
+    line-height: 1.7;
+}
+
+
+/* Headings */
+
+.markdown-body h1 {
+    font-size: 24px;
+    margin-top: 18px;
+    margin-bottom: 10px;
+}
+
+
+.markdown-body h2 {
+    font-size: 20px;
+    margin-top: 18px;
+    margin-bottom: 10px;
+}
+
+
+.markdown-body h3 {
+    font-size: 17px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+
+/* Paragraphs */
+
+.markdown-body p {
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+
+/* Bold */
+
+.markdown-body strong {
+    font-weight: 700;
+}
+
+
+/* Lists */
+
+.markdown-body ul,
+.markdown-body ol {
+    margin-top: 8px;
+    margin-bottom: 14px;
+    padding-left: 25px;
+}
+
+
+.markdown-body li {
+    margin-bottom: 6px;
+}
+
+
+/* Code */
+
+.markdown-body code {
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: #f1f1f1;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+
+/* Code blocks */
+
+.markdown-body pre {
+    margin: 15px 0;
+    padding: 15px;
+    overflow-x: auto;
+    border-radius: 8px;
+    background: #1e1e1e;
+}
+
+
+.markdown-body pre code {
+    padding: 0;
+    background: transparent;
+    color: #f5f5f5;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* Blockquote */
+
+.markdown-body blockquote {
+    margin: 15px 0;
+    padding: 10px 15px;
+    border-left: 4px solid #999;
+    background: #f5f5f5;
+}
+
+
+/* Horizontal line */
+
+.markdown-body hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+}
+
+
+/* Tables */
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+
+.markdown-body th,
+.markdown-body td {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+
+.markdown-body th {
+    font-weight: 600;
+    background: #f5f5f5;
+}
+
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+
+.typing {
+    color: #777;
+    font-style: italic;
+}
+
+
+/* ============================================================
+   ERROR
+   ============================================================ */
+
+.error-content {
+    color: #c62828;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    .message {
+        padding: 13px 14px;
+    }
+
+    .message-content {
+        font-size: 14px;
+    }
+
+    .markdown-body h2 {
+        font-size: 18px;
+    }
+
+    .markdown-body h3 {
+        font-size: 16px;
+    }
+
+}
+
