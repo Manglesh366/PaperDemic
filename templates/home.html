@@ -1,243 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>PaperDemic</title>
-
-    <link
-        rel="stylesheet"
-        href="/static/style.css"
-    >
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Assistant</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    // Applied before paint so the page never flashes the wrong theme.
+    (function () {
+      var saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+    })();
+  </script>
 </head>
-
 <body>
 
 <div class="app">
 
-    <!-- ================================================= -->
-    <!-- SIDEBAR -->
-    <!-- ================================================= -->
-
-    <aside class="sidebar">
-
-        <h2>PaperDemic-Rag assistant</h2>
-
-        <div class="user">
-
-            Logged in as:
-
-            <strong>
-                {{ username }}
-            </strong>
-
-        </div>
-
-        <hr>
-
-
-        <!-- ================================================= -->
-        <!-- UPLOAD -->
-        <!-- ================================================= -->
-
-        <h3>
-            Upload Documents
-        </h3>
-
-        <form
-            id="upload-form"
-            enctype="multipart/form-data"
-        >
-
-            <input
-                type="file"
-                id="file"
-                name="file"
-                accept=".pdf,.txt,.docx,.csv"
-                required
-            >
-
-            <button
-                type="submit"
-                class="upload-button"
-            >
-                Upload
-            </button>
-
-        </form>
-
-        <div id="upload-status"></div>
-
-
-        <!-- ================================================= -->
-        <!-- FILE LIST -->
-        <!-- ================================================= -->
-
-        <h3>
-            Your Documents
-        </h3>
-
-        <div class="uploaded-files">
-
-            {% for file in uploaded_files %}
-
-            <div class="file-item">
-
-                📄 {{ file }}
-
-            </div>
-
-            {% endfor %}
-
-        </div>
-
-
-        <hr>
-
-
-        <!-- ================================================= -->
-        <!-- CHAT HISTORY -->
-        <!-- ================================================= -->
-
-        <h3>
-            Chat History
-        </h3>
-
-        <div class="history">
-
-            {% for chat in history %}
-
-            <div class="history-item">
-
-                <strong>
-                    {{ chat.question[:50] }}
-                </strong>
-
-                <small>
-                    {{ chat.created_at }}
-                </small>
-
-            </div>
-
-            {% endfor %}
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- LOGOUT -->
-        <!-- ================================================= -->
-
-        <a
-            href="/logout"
-            class="logout"
-        >
-            Logout
-        </a>
-
-    </aside>
-
-
-    <!-- ================================================= -->
-    <!-- MAIN CHAT -->
-    <!-- ================================================= -->
-
-    <main class="chat-container">
-
-        <div class="chat-header">
-
-            <h1>
-                RAG Chat
-            </h1>
-
-            <p>
-                Ask questions about your uploaded documents
-            </p>
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- CHAT BOX -->
-        <!-- ================================================= -->
-
-        <div
-            id="chat-box"
-            class="chat-box"
-        >
-
-            {% for chat in history|reverse %}
-
-            <div class="message user-message">
-
-                <strong>
-                    You
-                </strong>
-
-                <p>
-                    {{ chat.question }}
-                </p>
-
-            </div>
-
-            <div class="message assistant-message">
-
-                <strong>
-                    RAG Assistant
-                </strong>
-
-                <p>
-                    {{ chat.answer }}
-                </p>
-
-            </div>
-
-            {% endfor %}
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- CHAT INPUT -->
-        <!-- ================================================= -->
-
-        <form
-            id="chat-form"
-            class="chat-form"
-        >
-
-            <input
-                id="question"
-                name="question"
-                type="text"
-                placeholder="Ask something about your documents..."
-                autocomplete="off"
-                required
-            >
-
-            <button type="submit">
-                Send
-            </button>
-
-        </form>
-
-    </main>
+  <!-- Sidebar: account, upload, document list, chat history -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <h2>RAG Assistant</h2>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch theme" title="Switch theme">🌙</button>
+    </div>
+    <div class="user">Logged in as <strong>{{ username }}</strong></div>
+
+    <hr>
+
+    <!-- Upload -->
+    <h3>Upload documents</h3>
+    <form id="upload-form" enctype="multipart/form-data">
+      <label for="file" class="file-picker">
+        <span class="file-picker-icon">📎</span>
+        <span id="file-name" class="file-picker-text">Choose a file</span>
+      </label>
+      <input
+        type="file"
+        id="file"
+        name="file"
+        accept=".pdf,.txt,.docx,.csv"
+        class="file-input-hidden"
+        required
+      >
+      <button type="submit" class="upload-button">Upload</button>
+    </form>
+    <div id="upload-status"></div>
+
+    <!-- Document list -->
+    <h3>Your documents</h3>
+    <div class="uploaded-files">
+      {% for file in uploaded_files %}
+      <div class="file-item">📄 {{ file }}</div>
+      {% endfor %}
+    </div>
+
+    <hr>
+
+    <!-- Chat history -->
+    <h3>Chat history</h3>
+    <div class="history">
+      {% for chat in history %}
+      <div class="history-item">
+        <strong>{{ chat.question[:50] }}</strong>
+        <small>{{ chat.created_at }}</small>
+      </div>
+      {% endfor %}
+    </div>
+
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
+
+  <!-- Main chat panel -->
+  <main class="chat-container">
+
+    <div class="chat-header">
+      <h1>RAG Chat</h1>
+      <p>Ask questions about your uploaded documents</p>
+    </div>
+
+    <div id="chat-box" class="chat-box">
+      {% for chat in history|reverse %}
+      <div class="message user-message">
+        <strong>You</strong>
+        <p>{{ chat.question }}</p>
+      </div>
+      <div class="message assistant-message">
+        <strong>RAG Assistant</strong>
+        <p>{{ chat.answer }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <form id="chat-form" class="chat-form">
+      <input
+        id="question"
+        name="question"
+        type="text"
+        placeholder="Ask something about your documents..."
+        autocomplete="off"
+        required
+      >
+      <button type="submit">Send</button>
+    </form>
+
+  </main>
 
 </div>
 
-
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
 <script src="/static/app.js"></script>
-
 </body>
-
 </html>

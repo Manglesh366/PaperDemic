@@ -1,917 +1,679 @@
+/* ==========================================================================
+   Reset & base
+   ========================================================================== */
+
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
+  margin: 0;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: var(--main-bg);
+  color: var(--main-text);
 }
 
+/* ==========================================================================
+   Theme tokens
+   Neutral grayscale palette — two themes switched by
+   [data-theme] on <html>. Default before JS runs is dark.
+   ========================================================================== */
 
-/* LOGIN */
+:root,
+[data-theme="dark"] {
+  --accent: #f2f2f2;
+  --accent-hover: #d6d6d6;
+  --accent-text: #1a1a1a;
+  --accent-ring: rgba(255, 255, 255, 0.18);
+  --user-msg-bg: #333333;
+  --danger: #ff8079;
+  --danger-bg: rgba(255, 107, 107, 0.14);
 
-.login-container {
-    min-height: 100vh;
+  --sidebar-bg: #1c1c1c;
+  --sidebar-line: #2e2e2e;
+  --sidebar-item: #262626;
+  --sidebar-text: #f2f2f2;
+  --sidebar-text-dim: #9a9a9a;
 
-    display: flex;
+  --main-bg: #262626;
+  --main-panel: #2d2d2d;
+  --main-line: #3a3a3a;
+  --main-text: #f2f2f2;
+  --main-text-soft: #a3a3a3;
+  --main-field: #333333;
 
-    justify-content: center;
+  --login-bg-start: #262626;
+  --login-bg-end: #1c1c1c;
+  --login-card-bg: #2d2d2d;
 
-    align-items: center;
+  --card-shadow: rgba(0, 0, 0, 0.35);
+  --card-shadow-hover: rgba(0, 0, 0, 0.5);
+  --radius: 10px;
 }
 
-.login-card {
-    width: 400px;
+[data-theme="light"] {
+  --accent: #1a1a1a;
+  --accent-hover: #333333;
+  --accent-text: #ffffff;
+  --accent-ring: rgba(0, 0, 0, 0.1);
+  --user-msg-bg: #f0f0f0;
+  --danger: #d1453d;
+  --danger-bg: #fdeceb;
 
-    background: white;
+  /* sidebar stays a step darker than the main panel, on purpose */
+  --sidebar-bg: #333333;
+  --sidebar-line: #454545;
+  --sidebar-item: #3d3d3d;
+  --sidebar-text: #f5f5f5;
+  --sidebar-text-dim: #b5b5b5;
 
-    padding: 40px;
+  --main-bg: #fafafa;
+  --main-panel: #ffffff;
+  --main-line: #e4e4e4;
+  --main-text: #1a1a1a;
+  --main-text-soft: #6b6b6b;
+  --main-field: #ffffff;
 
-    border-radius: 12px;
+  --login-bg-start: #f2f2f2;
+  --login-bg-end: #fafafa;
+  --login-card-bg: #ffffff;
 
-    box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.1);
+  --card-shadow: rgba(0, 0, 0, 0.08);
+  --card-shadow-hover: rgba(0, 0, 0, 0.14);
+  --radius: 10px;
 }
 
-.login-card h1 {
-    text-align: center;
-}
-
-.subtitle {
-    text-align: center;
-    color: #777;
-}
-
-.login-card label {
-    display: block;
-
-    margin-top: 20px;
-
-    margin-bottom: 6px;
-}
-
-.login-card input {
-    width: 100%;
-
-    padding: 12px;
-
-    border: 1px solid #ddd;
-
-    border-radius: 6px;
-}
-
-.login-card button {
-    width: 100%;
-
-    margin-top: 25px;
-
-    padding: 12px;
-
-    border: none;
-
-    border-radius: 6px;
-
-    background: #222;
-
-    color: white;
-
-    cursor: pointer;
-}
-
-.error {
-    background: #ffe5e5;
-
-    color: #c00;
-
-    padding: 10px;
-
-    border-radius: 6px;
-}
-
-.hint {
-    font-size: 12px;
-
-    text-align: center;
-
-    color: #888;
-}
-
-
-/* APP */
+/* ==========================================================================
+   App shell (sidebar + chat)
+   ========================================================================== */
 
 .app {
-    display: flex;
-
-    height: 100vh;
+  display: flex;
+  height: 100vh;
 }
 
-
-/* SIDEBAR */
-
 .sidebar {
-    width: 280px;
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-right: 1px solid var(--sidebar-line);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-    background: #202020;
-
-    color: white;
-
-    padding: 20px;
-
-    display: flex;
-
-    flex-direction: column;
+.sidebar-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .sidebar h2 {
-    margin-top: 0;
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: var(--sidebar-text);
+}
+
+.sidebar h3 {
+  margin: 20px 0 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sidebar-text-dim);
+}
+
+.sidebar hr {
+  border: none;
+  border-top: 1px solid var(--sidebar-line);
+  margin: 18px 0;
 }
 
 .user {
-    margin-top: 20px;
-
-    color: #bbb;
+  font-size: 13px;
+  color: var(--sidebar-text-dim);
 }
 
 .user strong {
-    color: white;
+  color: var(--sidebar-text);
 }
 
-.history {
-    overflow-y: auto;
+/* ---- theme toggle ---- */
 
-    flex: 1;
+.theme-toggle {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--sidebar-line);
+  background: var(--sidebar-item);
+  color: var(--sidebar-text-dim);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.history-item {
-    padding: 12px;
-
-    margin-bottom: 8px;
-
-    background: #2d2d2d;
-
-    border-radius: 6px;
-
-    cursor: pointer;
+.theme-toggle:hover {
+  color: var(--sidebar-text);
+  border-color: var(--sidebar-text-dim);
 }
 
-.history-item small {
-    display: block;
-
-    margin-top: 5px;
-
-    color: #999;
-}
-
-.logout {
-    display: block;
-
-    text-align: center;
-
-    padding: 12px;
-
-    background: #444;
-
-    color: white;
-
-    text-decoration: none;
-
-    border-radius: 6px;
-}
-
-
-/* CHAT */
-
-.chat-container {
-    flex: 1;
-
-    display: flex;
-
-    flex-direction: column;
-}
-
-.chat-header {
-    background: white;
-
-    padding: 20px;
-
-    border-bottom: 1px solid #ddd;
-}
-
-.chat-header h1 {
-    margin: 0;
-}
-
-.chat-header p {
-    margin-bottom: 0;
-
-    color: #777;
-}
-
-.chat-box {
-    flex: 1;
-
-    overflow-y: auto;
-
-    padding: 30px;
-}
-
-.message {
-    max-width: 800px;
-
-    margin: 15px auto;
-
-    padding: 15px;
-
-    border-radius: 10px;
-}
-
-.user-message {
-    background: #e8e8e8;
-}
-
-.assistant-message {
-    background: white;
-
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.message p {
-    white-space: pre-wrap;
-}
-
-
-/* INPUT */
-
-.chat-form {
-    display: flex;
-
-    padding: 20px;
-
-    background: white;
-
-    border-top: 1px solid #ddd;
-}
-
-.chat-form input {
-    flex: 1;
-
-    padding: 15px;
-
-    border: 1px solid #ddd;
-
-    border-radius: 8px 0 0 8px;
-
-    font-size: 16px;
-}
-
-.chat-form button {
-    padding: 15px 25px;
-
-    border: none;
-
-    background: #222;
-
-    color: white;
-
-    border-radius: 0 8px 8px 0;
-
-    cursor: pointer;
-}
-
-/* ============================================================
-   UPLOAD
-   ============================================================ */
+/* ---- upload ---- */
 
 #upload-form {
-    margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-#upload-form input[type="file"] {
-    width: 100%;
+/* Native file input is kept for functionality/accessibility, but visually
+   hidden in favor of the styled label below. */
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
-    color: #ddd;
+.file-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--sidebar-item);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px var(--card-shadow);
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--sidebar-text-dim);
+  transition: box-shadow 0.15s ease, color 0.15s ease;
+}
 
-    margin-bottom: 10px;
+.file-picker:hover {
+  box-shadow: 0 2px 10px var(--card-shadow-hover);
+  color: var(--sidebar-text);
+}
 
-    font-size: 12px;
+.file-input-hidden:focus-visible+.file-picker {
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.file-picker-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.file-picker-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .upload-button {
-    width: 100%;
-
-    padding: 10px;
-
-    border: none;
-
-    border-radius: 6px;
-
-    background: #444;
-
-    color: white;
-
-    cursor: pointer;
+  padding: 9px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .upload-button:hover {
-    background: #555;
+  background: var(--accent-hover);
 }
 
 #upload-status {
-    font-size: 12px;
-
-    color: #aaa;
-
-    margin-bottom: 15px;
+  font-size: 12px;
+  color: var(--sidebar-text-dim);
+  min-height: 16px;
 }
 
+/* ---- uploaded file list ---- */
+
 .uploaded-files {
-    max-height: 150px;
-
-    overflow-y: auto;
-
-    margin-bottom: 15px;
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .file-item {
-    padding: 8px;
-
-    margin-bottom: 5px;
-
-    background: #2d2d2d;
-
-    border-radius: 5px;
-
-    font-size: 12px;
-
-    word-break: break-word;
+  padding: 8px 10px;
+  background: var(--sidebar-item);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px var(--card-shadow);
+  font-size: 12px;
+  color: var(--sidebar-text-dim);
+  word-break: break-word;
 }
 
+/* ---- chat history ---- */
 
-/* ============================================================
-   LOGIN PAGE
-   ============================================================ */
-
-.login-page {
-    min-height: 100vh;
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    padding: 30px;
-
-    background: #f5f5f5;
+.history {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-
-.login-card {
-    width: 100%;
-
-    max-width: 430px;
-
-    background: white;
-
-    padding: 40px;
-
-    border-radius: 16px;
-
-    box-shadow:
-        0 10px 40px rgba(0, 0, 0, 0.10);
+.history-item {
+  padding: 10px;
+  background: var(--sidebar-item);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px var(--card-shadow);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-
-/* ============================================================
-   HEADER
-   ============================================================ */
-
-.login-header {
-    text-align: center;
-
-    margin-bottom: 30px;
+.history-item:hover {
+  box-shadow: 0 2px 10px var(--card-shadow-hover);
+  transform: translateY(-1px);
 }
 
-
-.logo {
-    width: 65px;
-
-    height: 65px;
-
-    margin: 0 auto 15px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 14px;
-
-    background: #222;
-
-    color: white;
-
-    font-size: 18px;
-
-    font-weight: bold;
+.history-item strong {
+  display: block;
+  font-size: 13px;
+  color: var(--sidebar-text);
+  font-weight: 500;
 }
 
-
-.login-header h1 {
-    margin: 0;
-
-    font-size: 28px;
-
-    color: #222;
+.history-item small {
+  display: block;
+  margin-top: 4px;
+  color: var(--sidebar-text-dim);
+  font-size: 11px;
 }
 
-
-.login-header p {
-    margin-top: 8px;
-
-    color: #777;
-
-    font-size: 14px;
+.logout {
+  display: block;
+  text-align: center;
+  padding: 11px;
+  background: var(--sidebar-item);
+  box-shadow: 0 1px 2px var(--card-shadow);
+  color: var(--sidebar-text);
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-
-/* ============================================================
-   ERROR
-   ============================================================ */
-
-.error-message {
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-    padding: 12px;
-
-    margin-bottom: 20px;
-
-    border-radius: 8px;
-
-    background: #ffe8e8;
-
-    color: #c62828;
-
-    font-size: 14px;
+.logout:hover {
+  background: var(--accent);
+  color: var(--accent-text);
 }
 
+/* ==========================================================================
+   Chat panel
+   ========================================================================== */
 
-/* ============================================================
-   FORM
-   ============================================================ */
-
-.login-form {
-    width: 100%;
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--main-bg);
+  color: var(--main-text);
 }
 
-
-.form-group {
-    margin-bottom: 20px;
+.chat-header {
+  background: var(--main-panel);
+  padding: 18px 30px;
+  border-bottom: 1px solid var(--main-line);
 }
 
-
-.form-group label {
-    display: block;
-
-    margin-bottom: 8px;
-
-    font-size: 14px;
-
-    font-weight: 600;
-
-    color: #333;
+.chat-header h1 {
+  margin: 0;
+  font-size: 18px;
 }
 
-
-.form-group input {
-    width: 100%;
-
-    padding: 13px 14px;
-
-    border: 1px solid #ddd;
-
-    border-radius: 8px;
-
-    outline: none;
-
-    font-size: 15px;
-
-    transition: border 0.2s;
+.chat-header p {
+  margin: 4px 0 0;
+  color: var(--main-text-soft);
+  font-size: 13px;
 }
 
-
-.form-group input:focus {
-    border-color: #222;
-
-    box-shadow:
-        0 0 0 2px rgba(0, 0, 0, 0.05);
+.chat-box {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 30px;
 }
-
-
-/* ============================================================
-   PASSWORD
-   ============================================================ */
-
-.password-container {
-    position: relative;
-
-    display: flex;
-
-    align-items: center;
-}
-
-
-.password-container input {
-    padding-right: 65px;
-}
-
-
-.password-toggle {
-    position: absolute;
-
-    right: 10px;
-
-    border: none;
-
-    background: transparent;
-
-    color: #555;
-
-    cursor: pointer;
-
-    font-size: 13px;
-
-    font-weight: 600;
-}
-
-
-.password-toggle:hover {
-    color: #000;
-}
-
-
-/* ============================================================
-   LOGIN BUTTON
-   ============================================================ */
-
-.login-button {
-    width: 100%;
-
-    padding: 14px;
-
-    margin-top: 5px;
-
-    border: none;
-
-    border-radius: 8px;
-
-    background: #222;
-
-    color: white;
-
-    font-size: 15px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition: background 0.2s;
-}
-
-
-.login-button:hover {
-    background: #444;
-}
-
-
-/* ============================================================
-   INFORMATION
-   ============================================================ */
-
-.login-info {
-    display: flex;
-
-    gap: 10px;
-
-    margin-top: 20px;
-
-    padding: 12px;
-
-    border-radius: 8px;
-
-    background: #f5f5f5;
-
-    color: #666;
-
-    font-size: 12px;
-
-    line-height: 1.5;
-}
-
-
-.login-info p {
-    margin: 0;
-}
-
-
-.info-icon {
-    font-size: 15px;
-}
-
-
-/* ============================================================
-   FEATURES
-   ============================================================ */
-
-.features {
-    margin-top: 25px;
-
-    padding-top: 20px;
-
-    border-top: 1px solid #eee;
-}
-
-
-.feature {
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-    margin-bottom: 12px;
-
-    color: #666;
-
-    font-size: 13px;
-}
-
-
-.feature:last-child {
-    margin-bottom: 0;
-}
-
-
-.feature-icon {
-    width: 25px;
-
-    text-align: center;
-
-    font-size: 15px;
-}
-
-
-/* ============================================================
-   MOBILE
-   ============================================================ */
-
-@media (max-width: 500px) {
-
-    .login-page {
-        padding: 15px;
-    }
-
-    .login-card {
-        padding: 30px 20px;
-    }
-
-    .login-header h1 {
-        font-size: 24px;
-    }
-
-}
-
-
-/* ============================================================
-   CHAT MESSAGE
-   ============================================================ */
 
 .message {
-    margin-bottom: 22px;
-    padding: 16px 18px;
-    border-radius: 12px;
-    line-height: 1.6;
+  max-width: 720px;
+  margin: 0 auto 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  line-height: 1.55;
 }
 
+.message strong {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  color: var(--main-text-soft);
+}
+
+.message p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 14.5px;
+}
 
 .user-message {
-    background: #f1f1f1;
+  background: var(--user-msg-bg);
 }
-
 
 .assistant-message {
-    background: #ffffff;
-    border: 1px solid #e5e5e5;
+  background: var(--main-panel);
+  border: 1px solid var(--main-line);
+  border-left: 3px solid var(--main-text-soft);
 }
 
+/* ---- chat input ---- */
 
-/* ============================================================
-   MESSAGE HEADER
-   ============================================================ */
-
-.message-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    font-size: 14px;
+.chat-form {
+  display: flex;
+  gap: 10px;
+  padding: 18px 30px;
+  background: var(--main-panel);
+  border-top: 1px solid var(--main-line);
 }
 
-
-.message-avatar {
-    font-size: 18px;
+.chat-form input {
+  flex: 1;
+  padding: 13px 16px;
+  background: var(--main-field);
+  border: 1px solid var(--main-line);
+  border-radius: var(--radius);
+  color: var(--main-text);
+  font-size: 14.5px;
+  outline: none;
+  transition: border-color 0.15s ease;
 }
 
-
-.message-content {
-    font-size: 15px;
-    color: #333;
+.chat-form input::placeholder {
+  color: var(--main-text-soft);
 }
 
-
-/* ============================================================
-   MARKDOWN
-   ============================================================ */
-
-.markdown-body {
-    line-height: 1.7;
+.chat-form input:focus {
+  border-color: var(--main-text-soft);
 }
 
-
-/* Headings */
-
-.markdown-body h1 {
-    font-size: 24px;
-    margin-top: 18px;
-    margin-bottom: 10px;
+.chat-form button {
+  padding: 0 22px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-
-.markdown-body h2 {
-    font-size: 20px;
-    margin-top: 18px;
-    margin-bottom: 10px;
+.chat-form button:hover {
+  background: var(--accent-hover);
 }
 
+/* ==========================================================================
+   Login page
+   ========================================================================== */
 
-.markdown-body h3 {
-    font-size: 17px;
-    margin-top: 16px;
-    margin-bottom: 8px;
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: linear-gradient(160deg, var(--login-bg-start) 0%, var(--login-bg-end) 55%);
 }
 
-
-/* Paragraphs */
-
-.markdown-body p {
-    margin-top: 8px;
-    margin-bottom: 12px;
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--login-card-bg);
+  color: var(--main-text);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px var(--card-shadow);
+  position: relative;
 }
 
-
-/* Bold */
-
-.markdown-body strong {
-    font-weight: 700;
+.login-header {
+  text-align: center;
+  margin-bottom: 28px;
 }
 
-
-/* Lists */
-
-.markdown-body ul,
-.markdown-body ol {
-    margin-top: 8px;
-    margin-bottom: 14px;
-    padding-left: 25px;
+.logo {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
-
-.markdown-body li {
-    margin-bottom: 6px;
+.login-header h1 {
+  margin: 0;
+  font-size: 24px;
 }
 
-
-/* Code */
-
-.markdown-body code {
-    padding: 2px 6px;
-    border-radius: 5px;
-    background: #f1f1f1;
-    font-family: monospace;
-    font-size: 13px;
+.login-header p {
+  margin: 6px 0 0;
+  color: var(--main-text-soft);
+  font-size: 13.5px;
 }
 
-
-/* Code blocks */
-
-.markdown-body pre {
-    margin: 15px 0;
-    padding: 15px;
-    overflow-x: auto;
-    border-radius: 8px;
-    background: #1e1e1e;
+.password-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
 }
 
-
-.markdown-body pre code {
-    padding: 0;
-    background: transparent;
-    color: #f5f5f5;
-    font-size: 13px;
-    line-height: 1.5;
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
+/* ---- error banner ---- */
 
-/* Blockquote */
-
-.markdown-body blockquote {
-    margin: 15px 0;
-    padding: 10px 15px;
-    border-left: 4px solid #999;
-    background: #f5f5f5;
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 13.5px;
 }
 
+/* ---- form ---- */
 
-/* Horizontal line */
-
-.markdown-body hr {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 20px 0;
+.form-group {
+  margin-bottom: 18px;
 }
 
+.form-group label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--main-text);
+}
 
-/* Tables */
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--main-field);
+  border: 1px solid var(--main-line);
+  border-radius: 8px;
+  color: var(--main-text);
+  font-size: 14.5px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
 
-.markdown-body table {
+.form-group input:focus {
+  border-color: var(--main-text-soft);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-container input {
+  padding-right: 60px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: var(--main-text-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: var(--main-text);
+}
+
+.login-button {
+  width: 100%;
+  padding: 13px;
+  margin-top: 6px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.login-button:hover {
+  background: var(--accent-hover);
+}
+
+/* ---- info + feature list ---- */
+
+.login-info {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--user-msg-bg);
+  color: var(--main-text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login-info p {
+  margin: 0;
+}
+
+.features {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--main-line);
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--main-text-soft);
+  font-size: 13px;
+}
+
+.feature:last-child {
+  margin-bottom: 0;
+}
+
+.feature-icon {
+  width: 22px;
+  text-align: center;
+}
+
+.login-theme-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--main-line);
+  background: transparent;
+  color: var(--main-text-soft);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.login-theme-toggle:hover {
+  color: var(--main-text);
+  border-color: var(--main-text-soft);
+}
+
+/* ==========================================================================
+   Mobile
+   ========================================================================== */
+
+@media (max-width: 720px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
     width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-    font-size: 14px;
+    height: auto;
+    max-height: 40vh;
+  }
 }
 
+@media (max-width: 500px) {
+  .login-page {
+    padding: 15px;
+  }
 
-.markdown-body th,
-.markdown-body td {
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    text-align: left;
+  .login-card {
+    padding: 28px 20px;
+  }
 }
-
-
-.markdown-body th {
-    font-weight: 600;
-    background: #f5f5f5;
-}
-
-
-/* ============================================================
-   LOADING
-   ============================================================ */
-
-.typing {
-    color: #777;
-    font-style: italic;
-}
-
-
-/* ============================================================
-   ERROR
-   ============================================================ */
-
-.error-content {
-    color: #c62828;
-}
-
-
-/* ============================================================
-   MOBILE
-   ============================================================ */
-
-@media (max-width: 600px) {
-
-    .message {
-        padding: 13px 14px;
-    }
-
-    .message-content {
-        font-size: 14px;
-    }
-
-    .markdown-body h2 {
-        font-size: 18px;
-    }
-
-    .markdown-body h3 {
-        font-size: 16px;
-    }
-
-}
-

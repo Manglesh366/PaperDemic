@@ -1,462 +1,378 @@
+// ============================================================================
+// THEME TOGGLE
+// ============================================================================
+// Handles light/dark mode and saves the user's preference in localStorage.
+// ============================================================================
 
-// ============================================================
-// CHAT
-// ============================================================
+(function setupThemeToggle() {
+  const themeToggle = document.getElementById("theme-toggle");
 
-const chatForm =
-    document.getElementById("chat-form");
+  if (!themeToggle) return;
 
-const questionInput =
-    document.getElementById("question");
+  const sunIcon = `
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 2v2"></path>
+      <path d="M12 20v2"></path>
+      <path d="m4.93 4.93 1.41 1.41"></path>
+      <path d="m17.66 17.66 1.41 1.41"></path>
+      <path d="M2 12h2"></path>
+      <path d="M20 12h2"></path>
+      <path d="m6.34 17.66-1.41 1.41"></path>
+      <path d="m19.07 4.93-1.41 1.41"></path>
+    </svg>
+  `;
 
-const chatBox =
-    document.getElementById("chat-box");
+  const moonIcon = `
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3
+        7 7 0 0 0 21 12.79z">
+      </path>
+    </svg>
+  `;
 
+  function syncThemeIcon() {
+    const isDark =
+      document.documentElement.getAttribute("data-theme") === "dark";
 
-// ============================================================
-// CHAT SUBMIT
-// ============================================================
+    // In dark mode show the sun because clicking it switches to light mode.
+    // In light mode show the moon because clicking it switches to dark mode.
+    themeToggle.innerHTML = isDark ? sunIcon : moonIcon;
 
-chatForm.addEventListener(
-    "submit",
-    async (event) => {
+    themeToggle.setAttribute(
+      "aria-label",
+      isDark ? "Switch to light mode" : "Switch to dark mode"
+    );
 
-        event.preventDefault();
+    themeToggle.setAttribute(
+      "title",
+      isDark ? "Switch to light mode" : "Switch to dark mode"
+    );
+  }
 
-        const question =
-            questionInput.value.trim();
+  themeToggle.addEventListener("click", () => {
+    const isDark =
+      document.documentElement.getAttribute("data-theme") === "dark";
 
-        if (!question) {
-            return;
-        }
+    const nextTheme = isDark ? "light" : "dark";
 
+    document.documentElement.setAttribute(
+      "data-theme",
+      nextTheme
+    );
 
-        // ----------------------------------------------------
-        // Add user message
-        // ----------------------------------------------------
+    localStorage.setItem("theme", nextTheme);
 
-        addUserMessage(question);
+    syncThemeIcon();
+  });
 
-        questionInput.value = "";
-
-
-        // ----------------------------------------------------
-        // Loading message
-        // ----------------------------------------------------
-
-        const loading =
-            document.createElement("div");
-
-        loading.className =
-            "message assistant-message";
-
-        loading.innerHTML = `
-            <div class="message-header">
-                <span class="message-avatar">🤖</span>
-                <strong>RAG Assistant</strong>
-            </div>
-
-            <div class="message-content">
-                <div class="typing">
-                    Searching your documents...
-                </div>
-            </div>
-        `;
-
-        chatBox.appendChild(loading);
-
-        scrollChat();
-
-
-        try {
-
-            // ------------------------------------------------
-            // Send question
-            // ------------------------------------------------
-
-            const formData =
-                new FormData();
-
-            formData.append(
-                "question",
-                question
-            );
-
-
-            const response =
-                await fetch(
-                    "/chat",
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
+  syncThemeIcon();
+})();
 
 
-            const data =
-                await response.json();
+// ============================================================================
+// PASSWORD VISIBILITY
+// ============================================================================
+// Shows or hides the password when the eye button is clicked.
+// ============================================================================
 
+(function setupPasswordToggle() {
+  const passwordInput = document.getElementById("password");
+  const togglePassword = document.getElementById("toggle-password");
+  const eyeIcon = document.getElementById("eye-icon");
+  const eyeSlashIcon = document.getElementById("eye-slash-icon");
 
-            if (!response.ok) {
+  // These elements only exist on the login page.
+  if (
+    !passwordInput ||
+    !togglePassword ||
+    !eyeIcon ||
+    !eyeSlashIcon
+  ) {
+    return;
+  }
 
-                throw new Error(
-                    data.detail ||
-                    "Something went wrong."
-                );
+  togglePassword.addEventListener("click", () => {
+    const isHidden = passwordInput.type === "password";
 
-            }
+    if (isHidden) {
+      // Show password
+      passwordInput.type = "text";
 
+      eyeIcon.style.display = "none";
+      eyeSlashIcon.style.display = "block";
 
-            // ------------------------------------------------
-            // Render Markdown answer
-            // ------------------------------------------------
+      togglePassword.setAttribute(
+        "aria-label",
+        "Hide password"
+      );
 
-            loading.innerHTML = `
-                <div class="message-header">
-                    <span class="message-avatar">🤖</span>
-                    <strong>RAG Assistant</strong>
-                </div>
+      togglePassword.setAttribute(
+        "title",
+        "Hide password"
+      );
+    } else {
+      // Hide password
+      passwordInput.type = "password";
 
-                <div class="message-content markdown-body">
-                    ${renderMarkdown(data.answer)}
-                </div>
-            `;
+      eyeIcon.style.display = "block";
+      eyeSlashIcon.style.display = "none";
 
+      togglePassword.setAttribute(
+        "aria-label",
+        "Show password"
+      );
 
-        } catch (error) {
-
-            loading.innerHTML = `
-                <div class="message-header">
-                    <span class="message-avatar">⚠️</span>
-                    <strong>Error</strong>
-                </div>
-
-                <div class="message-content error-content">
-                    ${escapeHtml(error.message)}
-                </div>
-            `;
-
-        }
-
-
-        scrollChat();
-
+      togglePassword.setAttribute(
+        "title",
+        "Show password"
+      );
     }
-);
+  });
+})();
 
 
-// ============================================================
-// ADD USER MESSAGE
-// ============================================================
+// ============================================================================
+// CHAT
+// ============================================================================
+// Sends the user's question to the FastAPI backend and displays the answer.
+// ============================================================================
 
-function addUserMessage(message) {
+(function setupChat() {
+  const chatForm = document.getElementById("chat-form");
+  const questionInput = document.getElementById("question");
+  const chatBox = document.getElementById("chat-box");
 
-    const messageElement =
-        document.createElement("div");
+  // These elements only exist on the home/chat page.
+  if (!chatForm || !questionInput || !chatBox) {
+    return;
+  }
 
-    messageElement.className =
-        "message user-message";
+  chatForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
-    messageElement.innerHTML = `
+    const question = questionInput.value.trim();
 
-        <div class="message-header">
+    if (!question) {
+      return;
+    }
 
-            <span class="message-avatar">
-                👤
-            </span>
+    // Show user's question immediately.
+    appendMessage("You", question);
 
-            <strong>
-                You
-            </strong>
+    questionInput.value = "";
+    questionInput.disabled = true;
 
-        </div>
+    // Temporary loading message.
+    const loading = createMessageEl(
+      "RAG Assistant",
+      "Searching your documents..."
+    );
 
-        <div class="message-content">
+    chatBox.appendChild(loading);
+    scrollToBottom();
 
-            ${escapeHtml(message)}
+    try {
+      const formData = new FormData();
 
-        </div>
+      formData.append("question", question);
 
+      const response = await fetch("/chat", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Something went wrong"
+        );
+      }
+
+      updateMessageEl(
+        loading,
+        "RAG Assistant",
+        data.answer
+      );
+
+    } catch (error) {
+      updateMessageEl(
+        loading,
+        "Error",
+        error.message
+      );
+
+    } finally {
+      questionInput.disabled = false;
+      questionInput.focus();
+
+      scrollToBottom();
+    }
+  });
+
+  function appendMessage(author, text) {
+    const element = createMessageEl(author, text);
+
+    chatBox.appendChild(element);
+
+    scrollToBottom();
+  }
+
+  function createMessageEl(author, text) {
+    const isUser = author === "You";
+
+    const element = document.createElement("div");
+
+    element.className = `
+      message
+      ${isUser ? "user-message" : "assistant-message"}
     `;
 
-    chatBox.appendChild(
-        messageElement
-    );
-}
+    element.innerHTML = `
+      <strong>${escapeHtml(author)}</strong>
+      <p>${escapeHtml(text)}</p>
+    `;
+
+    return element;
+  }
+
+  function updateMessageEl(element, author, text) {
+    element.innerHTML = `
+      <strong>${escapeHtml(author)}</strong>
+      <p>${escapeHtml(text)}</p>
+    `;
+  }
+
+  function scrollToBottom() {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+})();
 
 
-// ============================================================
-// MARKDOWN RENDERER
-// ============================================================
+// ============================================================================
+// FILE UPLOAD
+// ============================================================================
+// Uploads the selected document to FastAPI.
+// The backend then loads, splits, embeds and stores the document.
+// ============================================================================
 
-function renderMarkdown(markdown) {
+(function setupFileUpload() {
+  const uploadForm = document.getElementById("upload-form");
+  const uploadStatus = document.getElementById("upload-status");
+  const fileInput = document.getElementById("file");
+  const fileNameLabel = document.getElementById("file-name");
 
-    if (!markdown) {
+  // These elements only exist on the home/chat page.
+  if (
+    !uploadForm ||
+    !uploadStatus ||
+    !fileInput ||
+    !fileNameLabel
+  ) {
+    return;
+  }
 
-        return "";
-
+  // Show selected filename.
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      fileNameLabel.textContent =
+        fileInput.files[0].name;
+    } else {
+      fileNameLabel.textContent = "Choose a file";
     }
+  });
 
-
-    // --------------------------------------------------------
-    // If marked.js is loaded, use it
-    // --------------------------------------------------------
+  // Handle upload.
+  uploadForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
     if (
-        typeof marked !== "undefined"
+      !fileInput.files ||
+      fileInput.files.length === 0
     ) {
+      uploadStatus.textContent =
+        "Please select a file.";
 
-        return marked.parse(
-            markdown
-        );
-
+      return;
     }
 
+    const formData = new FormData();
 
-    // --------------------------------------------------------
-    // Fallback Markdown renderer
-    // --------------------------------------------------------
-
-    let html =
-        escapeHtml(markdown);
-
-
-    // Code blocks
-    html = html.replace(
-        /```([\s\S]*?)```/g,
-        function (_, code) {
-
-            return `
-                <pre>
-                    <code>${code.trim()}</code>
-                </pre>
-            `;
-
-        }
+    formData.append(
+      "file",
+      fileInput.files[0]
     );
 
+    uploadStatus.textContent =
+      "Uploading and indexing...";
 
-    // Inline code
-    html = html.replace(
-        /`([^`]+)`/g,
-        "<code>$1</code>"
-    );
+    try {
+      const response = await fetch("/upload", {
+        method: "POST",
+        body: formData,
+      });
 
+      const data = await response.json();
 
-    // Bold
-    html = html.replace(
-        /\*\*(.*?)\*\*/g,
-        "<strong>$1</strong>"
-    );
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Upload failed"
+        );
+      }
 
+      uploadStatus.textContent =
+        `${data.filename} uploaded successfully. ` +
+        `${data.chunks_added} chunks indexed.`;
 
-    // Italic
-    html = html.replace(
-        /\*(.*?)\*/g,
-        "<em>$1</em>"
-    );
+      // Reset file input.
+      fileInput.value = "";
 
+      fileNameLabel.textContent =
+        "Choose a file";
 
-    // H3
-    html = html.replace(
-        /^### (.*)$/gm,
-        "<h3>$1</h3>"
-    );
+      // Reload so the uploaded file appears in
+      // the sidebar/document list.
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
 
-
-    // H2
-    html = html.replace(
-        /^## (.*)$/gm,
-        "<h2>$1</h2>"
-    );
-
-
-    // H1
-    html = html.replace(
-        /^# (.*)$/gm,
-        "<h1>$1</h1>"
-    );
+    } catch (error) {
+      uploadStatus.textContent =
+        "Error: " + error.message;
+    }
+  });
+})();
 
 
-    // Unordered lists
-    html = html.replace(
-        /^\s*[-*] (.*)$/gm,
-        "<li>$1</li>"
-    );
-
-
-    // Wrap consecutive list items
-    html = html.replace(
-        /(<li>.*<\/li>)/gs,
-        "<ul>$1</ul>"
-    );
-
-
-    // Numbered lists
-    html = html.replace(
-        /^\s*\d+\.\s+(.*)$/gm,
-        "<li>$1</li>"
-    );
-
-
-    // New lines
-    html = html.replace(
-        /\n\n/g,
-        "</p><p>"
-    );
-
-
-    html =
-        "<p>" +
-        html +
-        "</p>";
-
-
-    return html;
-
-}
-
-
-// ============================================================
-// ESCAPE HTML
-// ============================================================
+// ============================================================================
+// UTILITIES
+// ============================================================================
+// Prevents HTML injection when displaying user/backend text.
+// ============================================================================
 
 function escapeHtml(text) {
+  const div = document.createElement("div");
 
-    const div =
-        document.createElement(
-            "div"
-        );
+  div.textContent = text;
 
-    div.textContent =
-        text;
-
-    return div.innerHTML;
-
+  return div.innerHTML;
 }
-
-
-// ============================================================
-// SCROLL CHAT
-// ============================================================
-
-function scrollChat() {
-
-    chatBox.scrollTop =
-        chatBox.scrollHeight;
-
-}
-
-
-// ============================================================
-// FILE UPLOAD
-// ============================================================
-
-const uploadForm =
-    document.getElementById(
-        "upload-form"
-    );
-
-
-const uploadStatus =
-    document.getElementById(
-        "upload-status"
-    );
-
-
-if (uploadForm) {
-
-    uploadForm.addEventListener(
-        "submit",
-        async (event) => {
-
-            event.preventDefault();
-
-
-            const fileInput =
-                document.getElementById(
-                    "file"
-                );
-
-
-            if (
-                !fileInput.files ||
-                fileInput.files.length === 0
-            ) {
-
-                uploadStatus.innerText =
-                    "Please select a file.";
-
-                return;
-
-            }
-
-
-            const formData =
-                new FormData();
-
-            formData.append(
-                "file",
-                fileInput.files[0]
-            );
-
-
-            uploadStatus.innerText =
-                "Uploading and indexing...";
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/upload",
-                        {
-                            method: "POST",
-                            body: formData
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        data.detail ||
-                        "Upload failed."
-                    );
-
-                }
-
-
-                uploadStatus.innerText =
-                    `${data.filename} uploaded successfully. ` +
-                    `${data.chunks_added} chunks indexed.`;
-
-
-                fileInput.value = "";
-
-
-                setTimeout(
-                    () => {
-                        window.location.reload();
-                    },
-                    1000
-                );
-
-
-            } catch (error) {
-
-                uploadStatus.innerText =
-                    "Error: " +
-                    error.message;
-
-            }
-
-        }
-    );
-
-}
-````
