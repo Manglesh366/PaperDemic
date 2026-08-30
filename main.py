@@ -1,5 +1,6 @@
 import os
 import shutil
+import sqlite3
 from pathlib import Path
 
 from fastapi import (
@@ -576,5 +577,133 @@ def logout():
     response.delete_cookie(
         key="session"
     )
+
+    return response
+
+@app.post("/delete-account")
+def delete_account(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+
+    # ------------------------------------------------
+    # Get logged-in user
+    # ------------------------------------------------
+
+    user = get_current_user(
+        request,
+        db
+    )
+
+    if not user:
+
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated"
+        )
+
+
+    user_id = user.id
+    username = user.username
+
+
+    # ------------------------------------------------
+    # 1. Delete FastAPI chat history
+    # ------------------------------------------------
+
+    db.query(ChatHistory).filter(
+        ChatHistory.user_id == user_id
+    ).delete(
+        synchronize_session=False
+    )
+
+
+    # ------------------------------------------------
+    # 2. Delete LangChain chat history
+    # ------------------------------------------------
+
+    chat_history_db = "chat_history.db"
+
+    if os.path.exists(chat_history_db):
+
+        connection = sqlite3.connect(
+            chat_history_db
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            DELETE FROM message_store
+            WHERE session_id = ?
+            """,
+            (str(user_id),)
+        )
+
+        connection.commit()
+        connection.close()
+
+
+    # ------------------------------------------------
+    # 3. Delete uploaded documents
+    # ------------------------------------------------
+
+    upload_directory = os.path.join(
+        "uploads",
+        f"user_{user_id}"
+    )
+
+    if os.path.exists(upload_directory):
+
+        shutil.rmtree(
+            upload_directory
+        )
+
+
+    # ------------------------------------------------
+    # 4. Delete user's Chroma database
+    # ------------------------------------------------
+
+    chroma_directory = os.path.join(
+        "data",
+        "chroma",
+        f"user_{user_id}"
+    )
+
+    if os.path.exists(chroma_directory):
+
+        shutil.rmtree(
+            chroma_directory
+        )
+
+
+    # ------------------------------------------------
+    # 5. Delete user from users table
+    # ------------------------------------------------
+
+    db.delete(user)
+
+    db.commit()
+
+
+    # ------------------------------------------------
+    # 6. Remove login session
+    # ------------------------------------------------
+
+    response = RedirectResponse(
+        "/",
+        status_code=303
+    )
+
+    response.delete_cookie(
+        "session"
+    )
+
+
+    print(
+        f"Deleted account and all data: "
+        f"{username} (ID: {user_id})"
+    )
+
 
     return response

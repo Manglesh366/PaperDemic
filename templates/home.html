@@ -68,6 +68,18 @@
     </div>
 
     <a href="/logout" class="logout">Logout</a>
+    <form
+    action="/delete-account"
+    method="post"
+    onsubmit="return confirmDeleteAccount();"
+>
+    <button
+        type="submit"
+        class="delete-account-btn"
+    >
+        Delete Account
+    </button>
+</form>
   </aside>
 
   <!-- Main chat panel -->

@@ -677,3 +677,15 @@ body {
     padding: 28px 20px;
   }
 }
+.delete-account-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.delete-account-btn:hover {
+    background: #bb2d3b;
+}

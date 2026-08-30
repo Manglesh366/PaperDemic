@@ -376,3 +376,19 @@ function escapeHtml(text) {
 
   return div.innerHTML;
 }
+
+
+function confirmDeleteAccount() {
+
+    return confirm(
+        "Are you sure you want to delete your account?\n\n" +
+        "This will permanently delete:\n" +
+        "- Your account\n" +
+        "- Your chat history\n" +
+        "- Your uploaded documents\n" +
+        "- Your document embeddings\n\n" +
+        "This action cannot be undone."
+    );
+
+}
+
