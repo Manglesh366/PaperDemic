@@ -6,6 +6,10 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
@@ -13,10 +17,9 @@ body {
   color: var(--main-text);
 }
 
+
 /* ==========================================================================
    Theme tokens
-   Neutral grayscale palette — two themes switched by
-   [data-theme] on <html>. Default before JS runs is dark.
    ========================================================================== */
 
 :root,
@@ -25,7 +28,9 @@ body {
   --accent-hover: #d6d6d6;
   --accent-text: #1a1a1a;
   --accent-ring: rgba(255, 255, 255, 0.18);
+
   --user-msg-bg: #333333;
+
   --danger: #ff8079;
   --danger-bg: rgba(255, 107, 107, 0.14);
 
@@ -46,8 +51,15 @@ body {
   --login-bg-end: #1c1c1c;
   --login-card-bg: #2d2d2d;
 
+  --code-bg: #1b1b1b;
+  --code-border: #3b3b3b;
+  --inline-code-bg: #3a3a3a;
+
+  --link: #d7d7d7;
+
   --card-shadow: rgba(0, 0, 0, 0.35);
   --card-shadow-hover: rgba(0, 0, 0, 0.5);
+
   --radius: 10px;
 }
 
@@ -56,11 +68,12 @@ body {
   --accent-hover: #333333;
   --accent-text: #ffffff;
   --accent-ring: rgba(0, 0, 0, 0.1);
+
   --user-msg-bg: #f0f0f0;
+
   --danger: #d1453d;
   --danger-bg: #fdeceb;
 
-  /* sidebar stays a step darker than the main panel, on purpose */
   --sidebar-bg: #333333;
   --sidebar-line: #454545;
   --sidebar-item: #3d3d3d;
@@ -78,13 +91,21 @@ body {
   --login-bg-end: #fafafa;
   --login-card-bg: #ffffff;
 
+  --code-bg: #f4f4f4;
+  --code-border: #dedede;
+  --inline-code-bg: #eeeeee;
+
+  --link: #333333;
+
   --card-shadow: rgba(0, 0, 0, 0.08);
   --card-shadow-hover: rgba(0, 0, 0, 0.14);
+
   --radius: 10px;
 }
 
+
 /* ==========================================================================
-   App shell (sidebar + chat)
+   App shell
    ========================================================================== */
 
 .app {
@@ -95,14 +116,24 @@ body {
 .sidebar {
   width: 280px;
   flex-shrink: 0;
+
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
+
   border-right: 1px solid var(--sidebar-line);
+
   padding: 24px 20px;
+
   display: flex;
   flex-direction: column;
+
   overflow: hidden;
 }
+
+
+/* ==========================================================================
+   Sidebar
+   ========================================================================== */
 
 .sidebar-top {
   display: flex;
@@ -119,9 +150,11 @@ body {
 
 .sidebar h3 {
   margin: 20px 0 10px;
+
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+
   color: var(--sidebar-text-dim);
 }
 
@@ -140,20 +173,32 @@ body {
   color: var(--sidebar-text);
 }
 
-/* ---- theme toggle ---- */
+
+/* ==========================================================================
+   Theme toggle
+   ========================================================================== */
 
 .theme-toggle {
   flex-shrink: 0;
+
   width: 32px;
   height: 32px;
+
   border-radius: 8px;
   border: 1px solid var(--sidebar-line);
+
   background: var(--sidebar-item);
   color: var(--sidebar-text-dim);
+
   font-size: 15px;
   line-height: 1;
+
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
+
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .theme-toggle:hover {
@@ -161,7 +206,10 @@ body {
   border-color: var(--sidebar-text-dim);
 }
 
-/* ---- upload ---- */
+
+/* ==========================================================================
+   Upload
+   ========================================================================== */
 
 #upload-form {
   display: flex;
@@ -170,17 +218,21 @@ body {
   margin-bottom: 6px;
 }
 
-/* Native file input is kept for functionality/accessibility, but visually
-   hidden in favor of the styled label below. */
 .file-input-hidden {
   position: absolute;
+
   width: 1px;
   height: 1px;
+
   padding: 0;
   margin: -1px;
+
   overflow: hidden;
+
   clip: rect(0, 0, 0, 0);
+
   white-space: nowrap;
+
   border: 0;
 }
 
@@ -188,14 +240,24 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+
   padding: 10px 12px;
+
   background: var(--sidebar-item);
+
   border-radius: 8px;
+
   box-shadow: 0 1px 2px var(--card-shadow);
+
   cursor: pointer;
+
   font-size: 12.5px;
+
   color: var(--sidebar-text-dim);
-  transition: box-shadow 0.15s ease, color 0.15s ease;
+
+  transition:
+    box-shadow 0.15s ease,
+    color 0.15s ease;
 }
 
 .file-picker:hover {
@@ -203,7 +265,7 @@ body {
   color: var(--sidebar-text);
 }
 
-.file-input-hidden:focus-visible+.file-picker {
+.file-input-hidden:focus-visible + .file-picker {
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
@@ -220,13 +282,18 @@ body {
 
 .upload-button {
   padding: 9px;
+
   border: none;
   border-radius: 6px;
+
   background: var(--accent);
   color: var(--accent-text);
+
   font-size: 13px;
   font-weight: 600;
+
   cursor: pointer;
+
   transition: background 0.15s ease;
 }
 
@@ -237,47 +304,74 @@ body {
 #upload-status {
   font-size: 12px;
   color: var(--sidebar-text-dim);
+
   min-height: 16px;
 }
 
-/* ---- uploaded file list ---- */
+
+/* ==========================================================================
+   Uploaded files
+   ========================================================================== */
 
 .uploaded-files {
   max-height: 140px;
+
   overflow-y: auto;
+
   display: flex;
   flex-direction: column;
+
   gap: 6px;
 }
 
 .file-item {
   padding: 8px 10px;
+
   background: var(--sidebar-item);
+
   border-radius: 6px;
+
   box-shadow: 0 1px 2px var(--card-shadow);
+
   font-size: 12px;
+
   color: var(--sidebar-text-dim);
+
   word-break: break-word;
 }
 
-/* ---- chat history ---- */
+
+/* ==========================================================================
+   Chat history
+   ========================================================================== */
 
 .history {
   flex: 1;
+
   overflow-y: auto;
+
   display: flex;
   flex-direction: column;
+
   gap: 6px;
+
   margin-bottom: 12px;
 }
 
 .history-item {
   padding: 10px;
+
   background: var(--sidebar-item);
+
   border-radius: 6px;
+
   box-shadow: 0 1px 2px var(--card-shadow);
+
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 .history-item:hover {
@@ -287,29 +381,51 @@ body {
 
 .history-item strong {
   display: block;
+
   font-size: 13px;
+
   color: var(--sidebar-text);
+
   font-weight: 500;
 }
 
 .history-item small {
   display: block;
+
   margin-top: 4px;
+
   color: var(--sidebar-text-dim);
+
   font-size: 11px;
 }
 
+
+/* ==========================================================================
+   Logout
+   ========================================================================== */
+
 .logout {
   display: block;
+
   text-align: center;
+
   padding: 11px;
+
   background: var(--sidebar-item);
+
   box-shadow: 0 1px 2px var(--card-shadow);
+
   color: var(--sidebar-text);
+
   text-decoration: none;
+
   border-radius: 6px;
+
   font-size: 13px;
-  transition: background 0.15s ease, color 0.15s ease;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .logout:hover {
@@ -317,22 +433,62 @@ body {
   color: var(--accent-text);
 }
 
+
+/* ==========================================================================
+   Delete account
+   ========================================================================== */
+
+.delete-account-btn {
+  width: 100%;
+
+  margin-top: 8px;
+
+  background: #dc3545;
+  color: white;
+
+  border: none;
+
+  padding: 10px 16px;
+
+  border-radius: 6px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.delete-account-btn:hover {
+  background: #bb2d3b;
+  transform: translateY(-1px);
+}
+
+
 /* ==========================================================================
    Chat panel
    ========================================================================== */
 
 .chat-container {
   flex: 1;
+
   display: flex;
   flex-direction: column;
+
   min-width: 0;
+
   background: var(--main-bg);
   color: var(--main-text);
 }
 
 .chat-header {
   background: var(--main-panel);
+
   padding: 18px 30px;
+
   border-bottom: 1px solid var(--main-line);
 }
 
@@ -343,69 +499,406 @@ body {
 
 .chat-header p {
   margin: 4px 0 0;
+
   color: var(--main-text-soft);
+
   font-size: 13px;
 }
 
+
+/* ==========================================================================
+   Chat messages
+   ========================================================================== */
+
 .chat-box {
   flex: 1;
+
   overflow-y: auto;
-  padding: 24px 30px;
+
+  padding: 28px 30px;
+
+  scroll-behavior: smooth;
 }
 
 .message {
-  max-width: 720px;
-  margin: 0 auto 16px;
-  padding: 14px 18px;
+  max-width: 760px;
+
+  margin: 0 auto 18px;
+
+  padding: 15px 19px;
+
   border-radius: var(--radius);
-  line-height: 1.55;
+
+  line-height: 1.6;
 }
 
 .message strong {
   display: block;
-  font-size: 12px;
+
+  font-size: 11px;
+
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 4px;
+
+  letter-spacing: 0.06em;
+
+  margin-bottom: 8px;
+
   color: var(--main-text-soft);
 }
 
-.message p {
-  margin: 0;
-  white-space: pre-wrap;
-  font-size: 14.5px;
-}
+
+/* ==========================================================================
+   User message
+   ========================================================================== */
 
 .user-message {
   background: var(--user-msg-bg);
 }
 
-.assistant-message {
-  background: var(--main-panel);
-  border: 1px solid var(--main-line);
-  border-left: 3px solid var(--main-text-soft);
+.user-message .message-content {
+  font-size: 14.5px;
+
+  white-space: pre-wrap;
+
+  word-break: break-word;
 }
 
-/* ---- chat input ---- */
+
+/* ==========================================================================
+   Assistant message
+   ========================================================================== */
+
+.assistant-message {
+  background: var(--main-panel);
+
+  border: 1px solid var(--main-line);
+
+  border-left: 3px solid var(--main-text-soft);
+
+  box-shadow: 0 2px 8px var(--card-shadow);
+}
+
+
+/* ==========================================================================
+   Assistant Markdown content
+   ========================================================================== */
+
+.message-content {
+  font-size: 14.5px;
+
+  line-height: 1.7;
+
+  color: var(--main-text);
+
+  overflow-wrap: anywhere;
+}
+
+
+/* --------------------------------------------------------------------------
+   Paragraphs
+   -------------------------------------------------------------------------- */
+
+.message-content p {
+  margin: 0 0 14px;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+
+/* --------------------------------------------------------------------------
+   Headings
+   -------------------------------------------------------------------------- */
+
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+  color: var(--main-text);
+
+  line-height: 1.3;
+
+  font-weight: 650;
+
+  margin-top: 22px;
+
+  margin-bottom: 10px;
+}
+
+.message-content h1 {
+  font-size: 20px;
+}
+
+.message-content h2 {
+  font-size: 18px;
+}
+
+.message-content h3 {
+  font-size: 16px;
+}
+
+.message-content h4 {
+  font-size: 15px;
+}
+
+.message-content h5,
+.message-content h6 {
+  font-size: 14px;
+}
+
+.message-content > h1:first-child,
+.message-content > h2:first-child,
+.message-content > h3:first-child,
+.message-content > h4:first-child {
+  margin-top: 0;
+}
+
+
+/* --------------------------------------------------------------------------
+   Bold & italic
+   -------------------------------------------------------------------------- */
+
+.message-content strong {
+  display: inline;
+
+  text-transform: none;
+
+  letter-spacing: normal;
+
+  margin: 0;
+
+  font-size: inherit;
+
+  color: var(--main-text);
+
+  font-weight: 650;
+}
+
+.message-content em {
+  font-style: italic;
+}
+
+
+/* --------------------------------------------------------------------------
+   Bullet lists
+   -------------------------------------------------------------------------- */
+
+.message-content ul,
+.message-content ol {
+  margin: 8px 0 16px;
+
+  padding-left: 25px;
+}
+
+.message-content ul {
+  list-style-type: disc;
+}
+
+.message-content ol {
+  list-style-type: decimal;
+}
+
+.message-content li {
+  margin: 5px 0;
+
+  padding-left: 3px;
+
+  line-height: 1.65;
+}
+
+.message-content li::marker {
+  color: var(--main-text-soft);
+}
+
+
+/* --------------------------------------------------------------------------
+   Nested list spacing
+   -------------------------------------------------------------------------- */
+
+.message-content li > ul,
+.message-content li > ol {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+
+/* --------------------------------------------------------------------------
+   Inline code
+   -------------------------------------------------------------------------- */
+
+.message-content .inline-code {
+  display: inline;
+
+  padding: 2px 6px;
+
+  background: var(--inline-code-bg);
+
+  border: 1px solid var(--main-line);
+
+  border-radius: 5px;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 0.88em;
+
+  white-space: break-spaces;
+}
+
+
+/* --------------------------------------------------------------------------
+   Code blocks
+   -------------------------------------------------------------------------- */
+
+.message-content .markdown-code-block {
+  margin: 16px 0;
+
+  padding: 15px 16px;
+
+  background: var(--code-bg);
+
+  border: 1px solid var(--code-border);
+
+  border-radius: 8px;
+
+  overflow-x: auto;
+
+  box-shadow: inset 0 1px 2px var(--card-shadow);
+}
+
+.message-content .markdown-code-block code {
+  display: block;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 13px;
+
+  line-height: 1.6;
+
+  white-space: pre;
+
+  color: var(--main-text);
+}
+
+
+/* --------------------------------------------------------------------------
+   Links
+   -------------------------------------------------------------------------- */
+
+.message-content a {
+  color: var(--link);
+
+  text-decoration: underline;
+
+  text-decoration-thickness: 1px;
+
+  text-underline-offset: 3px;
+
+  transition: opacity 0.15s ease;
+}
+
+.message-content a:hover {
+  opacity: 0.7;
+}
+
+
+/* --------------------------------------------------------------------------
+   Horizontal separator
+   -------------------------------------------------------------------------- */
+
+.message-content hr {
+  border: none;
+
+  border-top: 1px solid var(--main-line);
+
+  margin: 20px 0;
+}
+
+
+/* --------------------------------------------------------------------------
+   Tables
+   -------------------------------------------------------------------------- */
+
+.message-content table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  margin: 16px 0;
+
+  font-size: 13.5px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--main-line);
+
+  border-radius: 8px;
+}
+
+.message-content th,
+.message-content td {
+  padding: 9px 11px;
+
+  border: 1px solid var(--main-line);
+
+  text-align: left;
+
+  vertical-align: top;
+}
+
+.message-content th {
+  background: var(--user-msg-bg);
+
+  font-weight: 650;
+}
+
+
+/* ==========================================================================
+   Chat input
+   ========================================================================== */
 
 .chat-form {
   display: flex;
+
   gap: 10px;
+
   padding: 18px 30px;
+
   background: var(--main-panel);
+
   border-top: 1px solid var(--main-line);
 }
 
 .chat-form input {
   flex: 1;
+
   padding: 13px 16px;
+
   background: var(--main-field);
+
   border: 1px solid var(--main-line);
+
   border-radius: var(--radius);
+
   color: var(--main-text);
+
   font-size: 14.5px;
+
   outline: none;
-  transition: border-color 0.15s ease;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .chat-form input::placeholder {
@@ -414,23 +907,44 @@ body {
 
 .chat-form input:focus {
   border-color: var(--main-text-soft);
+
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.chat-form input:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
 }
 
 .chat-form button {
   padding: 0 22px;
+
   border: none;
+
   border-radius: var(--radius);
+
   background: var(--accent);
+
   color: var(--accent-text);
+
   font-size: 14px;
+
   font-weight: 600;
+
   cursor: pointer;
-  transition: background 0.15s ease;
+
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 
 .chat-form button:hover {
   background: var(--accent-hover);
+
+  transform: translateY(-1px);
 }
+
 
 /* ==========================================================================
    Login page
@@ -438,61 +952,102 @@ body {
 
 .login-page {
   min-height: 100vh;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   padding: 30px;
-  background: linear-gradient(160deg, var(--login-bg-start) 0%, var(--login-bg-end) 55%);
+
+  background:
+    linear-gradient(
+      160deg,
+      var(--login-bg-start) 0%,
+      var(--login-bg-end) 55%
+    );
 }
 
 .login-card {
   width: 100%;
+
   max-width: 420px;
+
   background: var(--login-card-bg);
+
   color: var(--main-text);
+
   padding: 40px;
+
   border-radius: 16px;
+
   box-shadow: 0 10px 40px var(--card-shadow);
+
   position: relative;
 }
 
 .login-header {
   text-align: center;
+
   margin-bottom: 28px;
 }
 
 .logo {
   width: 60px;
   height: 60px;
+
   margin: 0 auto 14px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   border-radius: 14px;
+
   background: var(--accent);
+
   color: var(--accent-text);
+
   font-size: 16px;
+
   font-weight: 700;
+
   letter-spacing: 0.03em;
 }
 
 .login-header h1 {
   margin: 0;
+
   font-size: 24px;
 }
 
 .login-header p {
   margin: 6px 0 0;
+
   color: var(--main-text-soft);
+
   font-size: 13.5px;
 }
 
+
+/* ==========================================================================
+   Password toggle
+   ========================================================================== */
+
 .password-toggle {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   cursor: pointer;
+
   background: transparent;
+
   border: none;
 }
 
@@ -501,21 +1056,35 @@ body {
   height: 20px;
 }
 
-/* ---- error banner ---- */
+
+/* ==========================================================================
+   Error banner
+   ========================================================================== */
 
 .error-message {
   display: flex;
+
   align-items: center;
+
   gap: 8px;
+
   padding: 12px 14px;
+
   margin-bottom: 20px;
+
   border-radius: 8px;
+
   background: var(--danger-bg);
+
   color: var(--danger);
+
   font-size: 13.5px;
 }
 
-/* ---- form ---- */
+
+/* ==========================================================================
+   Login form
+   ========================================================================== */
 
 .form-group {
   margin-bottom: 18px;
@@ -523,32 +1092,49 @@ body {
 
 .form-group label {
   display: block;
+
   margin-bottom: 7px;
+
   font-size: 13px;
+
   font-weight: 600;
+
   color: var(--main-text);
 }
 
 .form-group input {
   width: 100%;
+
   padding: 12px 14px;
+
   background: var(--main-field);
+
   border: 1px solid var(--main-line);
+
   border-radius: 8px;
+
   color: var(--main-text);
+
   font-size: 14.5px;
+
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .form-group input:focus {
   border-color: var(--main-text-soft);
+
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .password-container {
   position: relative;
+
   display: flex;
+
   align-items: center;
 }
 
@@ -558,12 +1144,19 @@ body {
 
 .password-toggle {
   position: absolute;
+
   right: 12px;
+
   border: none;
+
   background: transparent;
+
   color: var(--main-text-soft);
+
   font-size: 12.5px;
+
   font-weight: 600;
+
   cursor: pointer;
 }
 
@@ -573,15 +1166,25 @@ body {
 
 .login-button {
   width: 100%;
+
   padding: 13px;
+
   margin-top: 6px;
+
   border: none;
+
   border-radius: 8px;
+
   background: var(--accent);
+
   color: var(--accent-text);
+
   font-size: 14.5px;
+
   font-weight: 600;
+
   cursor: pointer;
+
   transition: background 0.15s ease;
 }
 
@@ -589,17 +1192,28 @@ body {
   background: var(--accent-hover);
 }
 
-/* ---- info + feature list ---- */
+
+/* ==========================================================================
+   Login info
+   ========================================================================== */
 
 .login-info {
   display: flex;
+
   gap: 10px;
+
   margin-top: 20px;
+
   padding: 12px 14px;
+
   border-radius: 8px;
+
   background: var(--user-msg-bg);
+
   color: var(--main-text);
+
   font-size: 12px;
+
   line-height: 1.5;
 }
 
@@ -609,16 +1223,23 @@ body {
 
 .features {
   margin-top: 24px;
+
   padding-top: 20px;
+
   border-top: 1px solid var(--main-line);
 }
 
 .feature {
   display: flex;
+
   align-items: center;
+
   gap: 10px;
+
   margin-bottom: 12px;
+
   color: var(--main-text-soft);
+
   font-size: 13px;
 }
 
@@ -628,47 +1249,131 @@ body {
 
 .feature-icon {
   width: 22px;
+
   text-align: center;
 }
 
+
+/* ==========================================================================
+   Login theme toggle
+   ========================================================================== */
+
 .login-theme-toggle {
   position: absolute;
+
   top: 16px;
   right: 16px;
+
   width: 32px;
   height: 32px;
+
   border-radius: 8px;
+
   border: 1px solid var(--main-line);
+
   background: transparent;
+
   color: var(--main-text-soft);
+
   font-size: 15px;
+
   line-height: 1;
+
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
+
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .login-theme-toggle:hover {
   color: var(--main-text);
+
   border-color: var(--main-text-soft);
 }
+
+
+/* ==========================================================================
+   Scrollbars
+   ========================================================================== */
+
+.chat-box::-webkit-scrollbar,
+.history::-webkit-scrollbar,
+.uploaded-files::-webkit-scrollbar,
+.markdown-code-block::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.chat-box::-webkit-scrollbar-track,
+.history::-webkit-scrollbar-track,
+.uploaded-files::-webkit-scrollbar-track,
+.markdown-code-block::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-box::-webkit-scrollbar-thumb,
+.history::-webkit-scrollbar-thumb,
+.uploaded-files::-webkit-scrollbar-thumb,
+.markdown-code-block::-webkit-scrollbar-thumb {
+  background: var(--main-line);
+
+  border-radius: 10px;
+}
+
 
 /* ==========================================================================
    Mobile
    ========================================================================== */
 
 @media (max-width: 720px) {
+
   .app {
     flex-direction: column;
   }
 
   .sidebar {
     width: 100%;
+
     height: auto;
+
     max-height: 40vh;
+  }
+
+  .chat-box {
+    padding: 20px 15px;
+  }
+
+  .chat-form {
+    padding: 14px 15px;
+  }
+
+  .message {
+    max-width: 100%;
+
+    padding: 13px 15px;
+  }
+
+  .chat-header {
+    padding: 16px 15px;
+  }
+
+  .message-content {
+    font-size: 14px;
+  }
+
+  .message-content table {
+    display: block;
+
+    overflow-x: auto;
+
+    white-space: nowrap;
   }
 }
 
+
 @media (max-width: 500px) {
+
   .login-page {
     padding: 15px;
   }
@@ -676,16 +1381,28 @@ body {
   .login-card {
     padding: 28px 20px;
   }
-}
-.delete-account-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-}
 
-.delete-account-btn:hover {
-    background: #bb2d3b;
+  .chat-form {
+    gap: 7px;
+  }
+
+  .chat-form input {
+    min-width: 0;
+  }
+
+  .chat-form button {
+    padding: 0 16px;
+  }
+
+  .message-content h1 {
+    font-size: 18px;
+  }
+
+  .message-content h2 {
+    font-size: 17px;
+  }
+
+  .message-content h3 {
+    font-size: 15px;
+  }
 }

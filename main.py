@@ -23,6 +23,11 @@ from fastapi.staticfiles import StaticFiles
 
 from sqlalchemy.orm import Session
 
+from database import get_db
+from models import User
+
+#from rag_service import process_document
+
 from itsdangerous import URLSafeSerializer
 
 from database import (
@@ -59,7 +64,7 @@ Base.metadata.create_all(bind=engine)
 # ============================================================
 
 app = FastAPI(
-    title="My RAG Assistant"
+    title="PaperDemic"
 )
 
 

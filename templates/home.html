@@ -3,37 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>RAG Assistant</title>
+
   <link rel="stylesheet" href="/static/style.css">
+
   <script>
-    // Applied before paint so the page never flashes the wrong theme.
+    // Apply saved theme before the page paints.
     (function () {
       var saved = localStorage.getItem("theme") || "dark";
       document.documentElement.setAttribute("data-theme", saved);
     })();
   </script>
 </head>
+
 <body>
 
 <div class="app">
 
-  <!-- Sidebar: account, upload, document list, chat history -->
+  <!-- =========================================================
+       SIDEBAR
+       ========================================================= -->
   <aside class="sidebar">
+
     <div class="sidebar-top">
       <h2>RAG Assistant</h2>
-      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch theme" title="Switch theme">🌙</button>
+
+      <button
+        type="button"
+        id="theme-toggle"
+        class="theme-toggle"
+        aria-label="Switch theme"
+        title="Switch theme"
+      >
+        🌙
+      </button>
     </div>
-    <div class="user">Logged in as <strong>{{ username }}</strong></div>
+
+    <div class="user">
+      Logged in as <strong>{{ username }}</strong>
+    </div>
 
     <hr>
 
-    <!-- Upload -->
+    <!-- =======================================================
+         UPLOAD DOCUMENTS
+         ======================================================= -->
     <h3>Upload documents</h3>
-    <form id="upload-form" enctype="multipart/form-data">
-      <label for="file" class="file-picker">
+
+    <form
+      id="upload-form"
+      enctype="multipart/form-data"
+    >
+
+      <label
+        for="file"
+        class="file-picker"
+      >
         <span class="file-picker-icon">📎</span>
-        <span id="file-name" class="file-picker-text">Choose a file</span>
+
+        <span
+          id="file-name"
+          class="file-picker-text"
+        >
+          Choose a file
+        </span>
       </label>
+
       <input
         type="file"
         id="file"
@@ -42,68 +78,213 @@
         class="file-input-hidden"
         required
       >
-      <button type="submit" class="upload-button">Upload</button>
+
+      <button
+        type="submit"
+        class="upload-button"
+      >
+        Upload
+      </button>
+
     </form>
+
     <div id="upload-status"></div>
 
-    <!-- Document list -->
+
+    <!-- =======================================================
+         DOCUMENT LIST
+         ======================================================= -->
     <h3>Your documents</h3>
+
     <div class="uploaded-files">
-      {% for file in uploaded_files %}
-      <div class="file-item">📄 {{ file }}</div>
-      {% endfor %}
+
+      {% if uploaded_files %}
+
+        {% for file in uploaded_files %}
+
+        <div class="file-item">
+          <span>📄</span>
+          <span>{{ file }}</span>
+        </div>
+
+        {% endfor %}
+
+      {% else %}
+
+        <div class="no-files">
+          No documents uploaded yet.
+        </div>
+
+      {% endif %}
+
     </div>
+
 
     <hr>
 
-    <!-- Chat history -->
+
+    <!-- =======================================================
+         CHAT HISTORY
+         ======================================================= -->
     <h3>Chat history</h3>
+
     <div class="history">
-      {% for chat in history %}
-      <div class="history-item">
-        <strong>{{ chat.question[:50] }}</strong>
-        <small>{{ chat.created_at }}</small>
-      </div>
-      {% endfor %}
+
+      {% if history %}
+
+        {% for chat in history %}
+
+        <div class="history-item">
+
+          <strong>
+            {{ chat.question[:50] }}
+            {% if chat.question|length > 50 %}...{% endif %}
+          </strong>
+
+          <small>
+            {{ chat.created_at }}
+          </small>
+
+        </div>
+
+        {% endfor %}
+
+      {% else %}
+
+        <div class="no-history">
+          No conversations yet.
+        </div>
+
+      {% endif %}
+
     </div>
 
-    <a href="/logout" class="logout">Logout</a>
+
+    <!-- =======================================================
+         ACCOUNT ACTIONS
+         ======================================================= -->
+
+    <a
+      href="/logout"
+      class="logout"
+    >
+      Logout
+    </a>
+
     <form
-    action="/delete-account"
-    method="post"
-    onsubmit="return confirmDeleteAccount();"
->
-    <button
+      action="/delete-account"
+      method="post"
+      onsubmit="return confirmDeleteAccount();"
+    >
+
+      <button
         type="submit"
         class="delete-account-btn"
-    >
+      >
         Delete Account
-    </button>
-</form>
+      </button>
+
+    </form>
+
   </aside>
 
-  <!-- Main chat panel -->
+
+  <!-- =========================================================
+       MAIN CHAT PANEL
+       ========================================================= -->
   <main class="chat-container">
 
+    <!-- Chat header -->
     <div class="chat-header">
+
       <h1>RAG Chat</h1>
-      <p>Ask questions about your uploaded documents</p>
+
+      <p>
+        Ask questions about your uploaded documents
+      </p>
+
     </div>
 
-    <div id="chat-box" class="chat-box">
-      {% for chat in history|reverse %}
-      <div class="message user-message">
-        <strong>You</strong>
-        <p>{{ chat.question }}</p>
-      </div>
-      <div class="message assistant-message">
-        <strong>RAG Assistant</strong>
-        <p>{{ chat.answer }}</p>
-      </div>
-      {% endfor %}
+
+    <!-- =======================================================
+         CHAT MESSAGES
+         ======================================================= -->
+    <div
+      id="chat-box"
+      class="chat-box"
+    >
+
+      {% if history %}
+
+        {% for chat in history|reverse %}
+
+        <!-- =================================================
+             USER MESSAGE
+             ================================================= -->
+        <div class="message user-message">
+
+          <strong>You</strong>
+
+          <div class="message-content">
+            {{ chat.question }}
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ASSISTANT MESSAGE
+
+             The raw Markdown answer is kept inside this
+             element. app.js will convert it into formatted
+             HTML using renderMarkdown().
+             ================================================= -->
+        <div class="message assistant-message">
+
+          <strong>RAG Assistant</strong>
+
+          <div class="message-content server-answer">
+            {{ chat.answer }}
+          </div>
+
+        </div>
+
+        {% endfor %}
+
+      {% else %}
+
+        <!-- =================================================
+             EMPTY CHAT STATE
+             ================================================= -->
+        <div class="empty-chat">
+
+          <div class="empty-chat-icon">
+            💬
+          </div>
+
+          <h3>
+            Start a conversation
+          </h3>
+
+          <p>
+            Upload a document and ask a question about it.
+          </p>
+
+        </div>
+
+      {% endif %}
+
     </div>
 
-    <form id="chat-form" class="chat-form">
+
+    <!-- =======================================================
+         CHAT INPUT
+         ======================================================= -->
+    <form
+      id="chat-form"
+      class="chat-form"
+    >
+
       <input
         id="question"
         name="question"
@@ -112,13 +293,24 @@
         autocomplete="off"
         required
       >
-      <button type="submit">Send</button>
+
+      <button
+        type="submit"
+      >
+        Send
+      </button>
+
     </form>
 
   </main>
 
 </div>
 
+
+<!-- ===========================================================
+     JAVASCRIPT
+     =========================================================== -->
 <script src="/static/app.js"></script>
+
 </body>
 </html>

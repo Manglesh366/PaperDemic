@@ -3,7 +3,10 @@
 # ============================================================
 
 import os
+import re
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
@@ -38,6 +41,13 @@ from langchain_core.messages import (
     HumanMessage,
     AIMessage
 )
+
+
+# ============================================================
+# LOAD ENVIRONMENT VARIABLES
+# ============================================================
+
+load_dotenv()
 
 
 # ============================================================
@@ -99,7 +109,8 @@ CHAT_HISTORY_DATABASE = (
 # ============================================================
 
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001"
+    model="models/gemini-embedding-001",
+    google_api_key=GOOGLE_API_KEY
 )
 
 
@@ -110,7 +121,16 @@ embeddings = GoogleGenerativeAIEmbeddings(
 llm = ChatOpenAI(
     model="poolside/laguna-s-2.1:free",
     base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY
+    api_key=OPENROUTER_API_KEY,
+    temperature=0.2,
+
+    # OpenRouter model fallbacks
+    extra_body={
+        "models": [
+            "poolside/laguna-s-2.1:free",
+            "openrouter/free"
+        ]
+    }
 )
 
 
@@ -133,36 +153,117 @@ prompt = ChatPromptTemplate.from_template(
 You are a helpful document-based AI assistant.
 
 Your job is to answer the user's question using ONLY the
-provided context and previous conversation.
+provided document context and previous conversation.
 
-Previous conversation:
-{chat_history}
+============================================================
+RESPONSE STYLE
+============================================================
 
-Context:
-{context}
+Write the answer like a polished professional AI assistant.
 
-Current question:
-{question}
+Follow these rules carefully:
 
-Follow these response rules:
+1. Start directly with the answer.
 
-1. Give a direct answer first.
-2. Use clear Markdown formatting.
-3. Use short headings when they improve readability.
-4. Use bullet points for lists.
-5. Use numbered lists for step-by-step explanations.
-6. Use **bold** only for important terms.
-7. Keep paragraphs short.
-8. Use code blocks when explaining code.
-9. Do not unnecessarily repeat the question.
-10. Do not use excessive headings.
-11. Do not add unnecessary introductory phrases.
-12. If the answer cannot be found in the context, clearly say:
+2. Do NOT add unnecessary introductions such as:
+   - "Sure!"
+   - "Certainly!"
+   - "Of course!"
+   - "Here is the answer:"
+   - "Based on the documents..."
+
+3. Use clean Markdown formatting.
+
+4. Use a short heading when the answer contains multiple
+   sections.
+
+5. Use bullet points when presenting multiple related items.
+
+6. Use numbered lists when explaining a process or steps.
+
+7. Use **bold** for important terms, definitions, or key ideas.
+
+8. Keep paragraphs short.
+
+9. Leave a blank line between separate sections.
+
+10. Do not put unnecessary spaces at the beginning of lines.
+
+11. Do not indent normal paragraphs.
+
+12. Do not repeat the same information.
+
+13. Do not unnecessarily repeat the user's question.
+
+14. If explaining a concept, prefer this structure when useful:
+
+   ### Main Idea
+
+   Short explanation.
+
+   ### How It Works
+
+   - Point
+   - Point
+   - Point
+
+   ### Example
+
+   Short example.
+
+15. If the answer is a comparison, use a Markdown table when
+    appropriate.
+
+16. If code is necessary, use a proper Markdown code block.
+
+17. Do not use excessive headings.
+
+18. Do not use excessive bold formatting.
+
+19. Do not use decorative characters or unnecessary symbols.
+
+20. Do not output internal reasoning or chain-of-thought.
+
+21. Keep the answer concise while still answering the question
+    completely.
+
+22. Never invent information that is not supported by the
+    provided context.
+
+23. If the answer cannot be found in the context, clearly say:
+
    "I don't know based on the provided documents."
 
-Return only the final answer.
+============================================================
+PREVIOUS CONVERSATION
+============================================================
 
-Answer:
+{chat_history}
+
+============================================================
+DOCUMENT CONTEXT
+============================================================
+
+{context}
+
+============================================================
+CURRENT QUESTION
+============================================================
+
+{question}
+
+============================================================
+FINAL ANSWER
+============================================================
+
+Return ONLY the final answer.
+
+Do not include:
+- analysis
+- reasoning
+- "Answer:"
+- unnecessary introductions
+- unnecessary conclusions
 """
 )
 
@@ -180,9 +281,44 @@ def format_docs(docs):
             "in the user's uploaded documents."
         )
 
-    return "\n\n".join(
-        doc.page_content
-        for doc in docs
+    formatted_documents = []
+
+    for doc in docs:
+
+        source = doc.metadata.get(
+            "source_file",
+            doc.metadata.get(
+                "source",
+                "Unknown source"
+            )
+        )
+
+        page = doc.metadata.get(
+            "page"
+        )
+
+        if page is not None:
+
+            page_number = page + 1
+
+            source_label = (
+                f"[Source: {source}, Page: {page_number}]"
+            )
+
+        else:
+
+            source_label = (
+                f"[Source: {source}]"
+            )
+
+        content = doc.page_content.strip()
+
+        formatted_documents.append(
+            f"{source_label}\n{content}"
+        )
+
+    return "\n\n---\n\n".join(
+        formatted_documents
     )
 
 
@@ -243,6 +379,7 @@ def load_document(
         .lower()
     )
 
+
     # --------------------------------------------------------
     # PDF
     # --------------------------------------------------------
@@ -252,6 +389,7 @@ def load_document(
         loader = PyMuPDFLoader(
             file_path
         )
+
 
     # --------------------------------------------------------
     # TXT
@@ -264,6 +402,7 @@ def load_document(
             encoding="utf-8"
         )
 
+
     # --------------------------------------------------------
     # DOCX
     # --------------------------------------------------------
@@ -273,6 +412,7 @@ def load_document(
         loader = Docx2txtLoader(
             file_path
         )
+
 
     # --------------------------------------------------------
     # CSV
@@ -284,11 +424,13 @@ def load_document(
             file_path
         )
 
+
     else:
 
         raise ValueError(
             f"Unsupported file type: {extension}"
         )
+
 
     return loader.load()
 
@@ -316,6 +458,7 @@ def add_document(
             "No text could be extracted from the document."
         )
 
+
     # --------------------------------------------------------
     # Split into chunks
     # --------------------------------------------------------
@@ -329,6 +472,7 @@ def add_document(
         raise ValueError(
             "Document produced no text chunks."
         )
+
 
     # --------------------------------------------------------
     # Add metadata
@@ -344,6 +488,7 @@ def add_document(
             "source_file"
         ] = Path(file_path).name
 
+
     # --------------------------------------------------------
     # Get user's vector store
     # --------------------------------------------------------
@@ -352,6 +497,7 @@ def add_document(
         user_id
     )
 
+
     # --------------------------------------------------------
     # Add chunks
     # --------------------------------------------------------
@@ -359,6 +505,7 @@ def add_document(
     vector_store.add_documents(
         documents=texts
     )
+
 
     return len(texts)
 
@@ -391,10 +538,177 @@ def format_history(
 
         return "No previous conversation."
 
-    return "\n".join(
-        f"{message.type}: {message.content}"
-        for message in messages
+    formatted_messages = []
+
+    for message in messages:
+
+        if message.type == "human":
+
+            role = "User"
+
+        elif message.type == "ai":
+
+            role = "Assistant"
+
+        else:
+
+            role = message.type.capitalize()
+
+        content = str(
+            message.content
+        ).strip()
+
+        formatted_messages.append(
+            f"{role}: {content}"
+        )
+
+    return "\n\n".join(
+        formatted_messages
     )
+
+
+# ============================================================
+# CLEAN LLM ANSWER
+# ============================================================
+
+def clean_answer(
+    answer: str
+):
+
+    if not answer:
+
+        return (
+            "I couldn't generate an answer."
+        )
+
+
+    # --------------------------------------------------------
+    # Convert to string
+    # --------------------------------------------------------
+
+    answer = str(
+        answer
+    )
+
+
+    # --------------------------------------------------------
+    # Normalize line endings
+    # --------------------------------------------------------
+
+    answer = answer.replace(
+        "\r\n",
+        "\n"
+    )
+
+    answer = answer.replace(
+        "\r",
+        "\n"
+    )
+
+
+    # --------------------------------------------------------
+    # Remove leading/trailing whitespace
+    # --------------------------------------------------------
+
+    answer = answer.strip()
+
+
+    # --------------------------------------------------------
+    # Remove excessive spaces at the beginning of lines
+    #
+    # This fixes responses like:
+    #
+    #     The attention mechanism...
+    #
+    # --------------------------------------------------------
+
+    lines = answer.split("\n")
+
+    cleaned_lines = []
+
+    for line in lines:
+
+        # Remove trailing spaces
+        line = line.rstrip()
+
+        # Preserve indentation inside code blocks
+        # but clean normal Markdown/text lines.
+        if not line.startswith("```"):
+
+            line = line.lstrip()
+
+        cleaned_lines.append(
+            line
+        )
+
+    answer = "\n".join(
+        cleaned_lines
+    )
+
+
+    # --------------------------------------------------------
+    # Normalize excessive blank lines
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"\n{3,}",
+        "\n\n",
+        answer
+    )
+
+
+    # --------------------------------------------------------
+    # Remove spaces before Markdown bullets
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"(?m)^[ \t]*[-*+][ \t]+",
+        "- ",
+        answer
+    )
+
+
+    # --------------------------------------------------------
+    # Normalize numbered lists
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"(?m)^[ \t]*(\d+)\.[ \t]+",
+        r"\1. ",
+        answer
+    )
+
+
+    # --------------------------------------------------------
+    # Normalize Markdown headings
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"(?m)^[ \t]*#{1,6}[ \t]*",
+        lambda match: match.group(0).lstrip(),
+        answer
+    )
+
+
+    # --------------------------------------------------------
+    # Remove accidental "Answer:" prefix
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"^\s*(Answer|Final Answer)\s*:\s*",
+        "",
+        answer,
+        flags=re.IGNORECASE
+    )
+
+
+    # --------------------------------------------------------
+    # Final cleanup
+    # --------------------------------------------------------
+
+    answer = answer.strip()
+
+    return answer
 
 
 # ============================================================
@@ -415,6 +729,22 @@ def ask_rag(
 
         user_id = session_id
 
+
+    # --------------------------------------------------------
+    # Clean question
+    # --------------------------------------------------------
+
+    question = str(
+        question
+    ).strip()
+
+    if not question:
+
+        raise ValueError(
+            "Question cannot be empty."
+        )
+
+
     # --------------------------------------------------------
     # Get user's vector store
     # --------------------------------------------------------
@@ -423,6 +753,7 @@ def ask_rag(
         user_id
     )
 
+
     # --------------------------------------------------------
     # Get vector collection
     # --------------------------------------------------------
@@ -430,6 +761,7 @@ def ask_rag(
     collection = vector_store._collection
 
     document_count = collection.count()
+
 
     # --------------------------------------------------------
     # Get conversation history
@@ -444,6 +776,7 @@ def ask_rag(
     chat_history = format_history(
         previous_messages
     )
+
 
     # --------------------------------------------------------
     # Search user's documents
@@ -471,6 +804,7 @@ def ask_rag(
             "The user has not uploaded any documents yet."
         )
 
+
     # --------------------------------------------------------
     # Build prompt
     # --------------------------------------------------------
@@ -481,6 +815,7 @@ def ask_rag(
         "question": question
     })
 
+
     # --------------------------------------------------------
     # Call LLM
     # --------------------------------------------------------
@@ -489,7 +824,22 @@ def ask_rag(
         formatted_prompt
     )
 
+
+    # --------------------------------------------------------
+    # Get answer
+    # --------------------------------------------------------
+
     answer = response.content
+
+
+    # --------------------------------------------------------
+    # Clean and refine answer
+    # --------------------------------------------------------
+
+    answer = clean_answer(
+        answer
+    )
+
 
     # --------------------------------------------------------
     # Save conversation
@@ -507,10 +857,9 @@ def ask_rag(
         )
     )
 
+
     # --------------------------------------------------------
     # Return answer
     # --------------------------------------------------------
 
     return answer
-
-
